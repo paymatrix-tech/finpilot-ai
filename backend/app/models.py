@@ -33,9 +33,15 @@ class Payment(Base):
         nullable=False,
     )
 
-    events: Mapped[list["PaymentEvent"]] = relationship(back_populates="payment")
-    logs: Mapped[list["PaymentLog"]] = relationship(back_populates="payment")
-    investigations: Mapped[list["Investigation"]] = relationship(back_populates="payment")
+    events: Mapped[list["PaymentEvent"]] = relationship(
+        back_populates="payment", cascade="all, delete-orphan"
+    )
+    logs: Mapped[list["PaymentLog"]] = relationship(
+        back_populates="payment", cascade="all, delete-orphan"
+    )
+    investigations: Mapped[list["Investigation"]] = relationship(
+        back_populates="payment", cascade="all, delete-orphan"
+    )
 
 
 class PaymentEvent(Base):
