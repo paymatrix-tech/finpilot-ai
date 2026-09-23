@@ -1,0 +1,28 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Source Sans 3", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Fraunces", ui-serif, Georgia, serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+  --color-ink: #1c1915;
+  --color-muted: #6b645b;
+  --color-accent: #0f5c56;
+  --color-accent-soft: #e4f1ef;
+  --color-line: #e4ddd2;
+  --color-panel: #fbf8f2;
+  --color-page: #efe8dc;
+  --color-danger: #9c2f2f;
+  --color-danger-soft: #f6e4e0;
+  --color-success: #2d6a4f;
+  --color-success-soft: #e3f0e8;
+  --color-copper: #b56a3c;
+}
+
+body {
+  @apply m-0 bg-page font-sans text-ink antialiased;
+}
+
+input[type="search"]::-webkit-search-decoration,
+input[type="search"]::-webkit-search-cancel-button {
+  appearance: none;
+}

@@ -756,13 +756,13 @@ Every documentation-based claim should reference the source.
 
 ## Day 1
 
--   [ ] Create GitHub repository
--   [ ] Create project structure
--   [ ] Create FastAPI app
--   [ ] Create React app
--   [ ] Create Docker Compose
--   [ ] Start PostgreSQL
--   [ ] Add `.env.example`
+-   [x] Create GitHub repository
+-   [x] Create project structure
+-   [x] Create FastAPI app
+-   [x] Create React app
+-   [x] Create Docker Compose
+-   [x] Start PostgreSQL
+-   [x] Add `.env.example`
 
 Goal:
 
@@ -774,10 +774,10 @@ Frontend + Backend + PostgreSQL running
 
 ## Day 2
 
--   [ ] Create SQLAlchemy models
--   [ ] Create database tables
--   [ ] Add migrations
--   [ ] Verify database connection
+-   [x] Create SQLAlchemy models
+-   [x] Create database tables
+-   [x] Add migrations
+-   [x] Verify database connection
 
 Goal:
 
@@ -789,10 +789,10 @@ Database schema working
 
 ## Day 3
 
--   [ ] Implement payment repository
--   [ ] Implement payment service
--   [ ] Implement payment APIs
--   [ ] Add API tests
+-   [x] Implement payment repository
+-   [x] Implement payment service
+-   [x] Implement payment APIs
+-   [x] Add API tests
 
 Goal:
 
@@ -807,10 +807,10 @@ working.
 
 ## Day 4
 
--   [ ] Generate synthetic payment data
--   [ ] Generate events
--   [ ] Generate logs
--   [ ] Create failure scenarios
+-   [x] Generate synthetic payment data
+-   [x] Generate events
+-   [x] Generate logs
+-   [x] Create failure scenarios
 
 Goal:
 
@@ -822,11 +822,11 @@ Realistic test data available
 
 ## Day 5
 
--   [ ] Build payment list UI
--   [ ] Add search
--   [ ] Display status
--   [ ] Display gateway
--   [ ] Display error code
+-   [x] Build payment list UI
+-   [x] Add search
+-   [x] Display status
+-   [x] Display gateway
+-   [x] Display error code
 
 Goal:
 
@@ -838,11 +838,11 @@ User can find a payment
 
 ## Day 6
 
--   [ ] Build payment details
--   [ ] Build timeline
--   [ ] Display events
--   [ ] Display logs
--   [ ] Add Investigate button
+-   [x] Build payment details
+-   [x] Build timeline
+-   [x] Display events
+-   [x] Display logs
+-   [x] Add Investigate button
 
 Goal:
 
@@ -854,10 +854,10 @@ User can understand a payment manually
 
 ## Day 7
 
--   [ ] Connect frontend and backend
--   [ ] Fix UI/API issues
--   [ ] Clean project structure
--   [ ] Commit milestone
+-   [x] Connect frontend and backend
+-   [x] Fix UI/API issues
+-   [x] Clean project structure
+-   [x] Commit milestone
 
 Milestone:
 
