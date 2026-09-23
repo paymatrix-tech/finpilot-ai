@@ -1,0 +1,62 @@
+:root {
+  color: #122033;
+  background: #f4f7fb;
+  font-family: "Segoe UI", system-ui, sans-serif;
+  line-height: 1.5;
+}
+
+body {
+  margin: 0;
+}
+
+main {
+  max-width: 32rem;
+  margin: 4rem auto;
+  padding: 2rem;
+  background: #fff;
+  border: 1px solid #d7e0ea;
+  border-radius: 12px;
+}
+
+.eyebrow {
+  margin: 0;
+  color: #3d5a80;
+  font-size: 0.85rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+h1 {
+  margin: 0.25rem 0 0;
+  font-size: 2rem;
+}
+
+.lede {
+  color: #4c5d73;
+}
+
+dl {
+  display: grid;
+  gap: 0.75rem;
+  margin: 1.5rem 0 0;
+}
+
+dl div {
+  display: flex;
+  justify-content: space-between;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid #e6edf4;
+}
+
+dt {
+  color: #4c5d73;
+}
+
+dd {
+  margin: 0;
+  font-weight: 600;
+}
+
+.error {
+  color: #9b2335;
+}
