@@ -20,6 +20,10 @@ class PaymentRead(BaseModel):
     updated_at: datetime
 
 
+class PaymentListResponse(BaseModel):
+    items: list[PaymentRead]
+
+
 class PaymentEventRead(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 

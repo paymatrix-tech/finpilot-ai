@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.db import check_database
+from app.routers.payments import router as payments_router
 
 app = FastAPI(title="FinPilot API")
 
@@ -11,6 +12,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+app.include_router(payments_router)
 
 
 @app.get("/health")
