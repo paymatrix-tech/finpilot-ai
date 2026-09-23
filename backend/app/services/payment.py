@@ -1,6 +1,6 @@
 from fastapi import HTTPException, status
 
-from app.models import Payment
+from app.models import Payment, PaymentEvent, PaymentLog
 from app.repositories.payment import PaymentRepository
 
 
@@ -25,3 +25,11 @@ class PaymentService:
                 detail=f"Payment {payment_id} was not found.",
             )
         return payment
+
+    def get_payment_events(self, payment_id: str) -> list[PaymentEvent]:
+        self.get_payment(payment_id)
+        return self.repository.list_events(payment_id)
+
+    def get_payment_logs(self, payment_id: str) -> list[PaymentLog]:
+        self.get_payment(payment_id)
+        return self.repository.list_logs(payment_id)

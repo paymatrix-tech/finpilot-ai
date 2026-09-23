@@ -24,6 +24,14 @@ class PaymentListResponse(BaseModel):
     items: list[PaymentRead]
 
 
+class PaymentEventListResponse(BaseModel):
+    items: list[PaymentEventRead]
+
+
+class PaymentLogListResponse(BaseModel):
+    items: list[PaymentLogRead]
+
+
 class PaymentEventRead(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 

@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 
 from app.db import SessionLocal
 from app.main import app
-from app.models import Payment
+from app.models import Payment, PaymentEvent, PaymentLog
 
 TEST_PREFIX = "PAY-TEST-"
 
@@ -55,9 +55,50 @@ def sample_payments(db: Session) -> Generator[list[Payment], None, None]:
     for payment in payments:
         db.refresh(payment)
 
+    failed_id = payments[0].id
+    db.add_all(
+        [
+            PaymentEvent(
+                payment_id=failed_id,
+                event_type="PAYMENT_CREATED",
+                status="CREATED",
+            ),
+            PaymentEvent(
+                payment_id=failed_id,
+                event_type="VALIDATED",
+                status="VALIDATED",
+            ),
+            PaymentEvent(
+                payment_id=failed_id,
+                event_type="GATEWAY_RESPONSE",
+                status="DECLINED",
+                event_metadata={"error_code": "R01"},
+            ),
+            PaymentLog(
+                payment_id=failed_id,
+                service="payments-api",
+                level="INFO",
+                message="Sending payment to gateway",
+            ),
+            PaymentLog(
+                payment_id=failed_id,
+                service="payments-api",
+                level="WARN",
+                message="Gateway returned R01",
+            ),
+        ]
+    )
+    db.commit()
+
     try:
         yield payments
     finally:
+        db.query(PaymentLog).filter(PaymentLog.payment_id.startswith(TEST_PREFIX)).delete(
+            synchronize_session=False
+        )
+        db.query(PaymentEvent).filter(PaymentEvent.payment_id.startswith(TEST_PREFIX)).delete(
+            synchronize_session=False
+        )
         db.query(Payment).filter(Payment.id.startswith(TEST_PREFIX)).delete(
             synchronize_session=False
         )

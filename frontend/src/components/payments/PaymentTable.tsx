@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { formatAmount } from "../../lib/format";
 import type { Payment } from "../../types/payment";
 import { PaymentStatusBadge } from "./PaymentStatusBadge";
@@ -26,7 +27,12 @@ export function PaymentTable({ payments }: PaymentTableProps) {
               className="border-t border-line/80 transition-colors hover:bg-accent-soft/40"
             >
               <td className="px-4 py-4 sm:px-5">
-                <div className="font-mono text-[13px] font-medium">{payment.id}</div>
+                <Link
+                  to={`/payments/${encodeURIComponent(payment.id)}`}
+                  className="font-mono text-[13px] font-medium text-ink no-underline hover:text-accent"
+                >
+                  {payment.id}
+                </Link>
                 <div className="mt-0.5 text-xs text-muted">{payment.payment_method}</div>
               </td>
               <td className="px-4 py-4 text-[15px] font-medium tabular-nums sm:px-5">

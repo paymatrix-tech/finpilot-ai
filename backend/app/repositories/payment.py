@@ -1,7 +1,7 @@
 from sqlalchemy import or_, select
 from sqlalchemy.orm import Session
 
-from app.models import Payment
+from app.models import Payment, PaymentEvent, PaymentLog
 
 
 class PaymentRepository:
@@ -35,6 +35,22 @@ class PaymentRepository:
 
     def get_by_id(self, payment_id: str) -> Payment | None:
         return self.session.get(Payment, payment_id)
+
+    def list_events(self, payment_id: str) -> list[PaymentEvent]:
+        statement = (
+            select(PaymentEvent)
+            .where(PaymentEvent.payment_id == payment_id)
+            .order_by(PaymentEvent.created_at.asc())
+        )
+        return list(self.session.scalars(statement).all())
+
+    def list_logs(self, payment_id: str) -> list[PaymentLog]:
+        statement = (
+            select(PaymentLog)
+            .where(PaymentLog.payment_id == payment_id)
+            .order_by(PaymentLog.created_at.asc())
+        )
+        return list(self.session.scalars(statement).all())
 
     def add(self, payment: Payment) -> Payment:
         self.session.add(payment)
