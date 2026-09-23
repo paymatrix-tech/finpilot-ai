@@ -1,28 +1,59 @@
 import { Link, useParams } from "react-router-dom";
-import type { PropsWithChildren } from "react";
+import type { PropsWithChildren, ReactNode } from "react";
 import { InvestigateButton } from "../components/payments/InvestigateButton";
 import { PaymentEventsList } from "../components/payments/PaymentEventsList";
 import { PaymentLogsList } from "../components/payments/PaymentLogsList";
 import { PaymentStatusBadge } from "../components/payments/PaymentStatusBadge";
 import { PaymentTimeline } from "../components/payments/PaymentTimeline";
+import { ApiError } from "../api/client";
 import { usePaymentDetail } from "../hooks/usePaymentDetail";
 import { formatAmount } from "../lib/format";
 
 function DetailPanel({
   title,
   children,
-}: PropsWithChildren<{ title: string }>) {
+  footer,
+}: PropsWithChildren<{ title: string; footer?: ReactNode }>) {
   return (
     <section className="rounded-3xl border border-line bg-panel p-5 shadow-[0_24px_60px_rgba(28,25,21,0.04)] sm:p-6">
       <h2 className="text-sm font-semibold tracking-wide text-ink">{title}</h2>
       <div className="mt-4">{children}</div>
+      {footer}
     </section>
+  );
+}
+
+function errorMessage(error: unknown): string {
+  if (error instanceof ApiError || error instanceof Error) {
+    return error.message;
+  }
+  return "Request failed";
+}
+
+function PanelSkeleton() {
+  return (
+    <div className="animate-pulse space-y-3">
+      <div className="h-4 w-3/4 rounded bg-line/60" />
+      <div className="h-4 w-1/2 rounded bg-line/40" />
+      <div className="h-4 w-2/3 rounded bg-line/40" />
+    </div>
   );
 }
 
 export function PaymentDetailPage() {
   const { paymentId } = useParams<{ paymentId: string }>();
-  const { payment, events, logs, isPending, isError, error } = usePaymentDetail(paymentId);
+  const {
+    payment,
+    events,
+    logs,
+    isPaymentPending,
+    isEventsPending,
+    isLogsPending,
+    notFound,
+    paymentError,
+    eventsError,
+    logsError,
+  } = usePaymentDetail(paymentId);
 
   if (!paymentId) {
     return (
@@ -41,17 +72,29 @@ export function PaymentDetailPage() {
         </Link>
       </div>
 
-      {isPending && (
+      {isPaymentPending && (
         <div className="animate-pulse space-y-4">
           <div className="h-10 w-48 rounded-lg bg-line/60" />
           <div className="h-24 rounded-3xl bg-line/40" />
         </div>
       )}
 
-      {isError && !payment && (
+      {!isPaymentPending && notFound && (
+        <div className="rounded-3xl border border-line bg-panel px-6 py-10 text-center">
+          <p className="font-mono text-lg">{paymentId}</p>
+          <p className="mt-2 text-sm text-muted">No payment exists with that ID.</p>
+          <Link
+            to="/"
+            className="mt-4 inline-block text-sm font-medium text-accent no-underline hover:underline"
+          >
+            Search the ledger
+          </Link>
+        </div>
+      )}
+
+      {!isPaymentPending && paymentError && !notFound && !payment && (
         <p className="text-sm text-danger">
-          Could not load payment.{" "}
-          {error instanceof Error ? error.message : "Request failed"}
+          Could not load payment. {errorMessage(paymentError)}
         </p>
       )}
 
@@ -97,16 +140,43 @@ export function PaymentDetailPage() {
           </header>
 
           <div className="grid gap-6 lg:grid-cols-2">
-            <DetailPanel title="Payment timeline">
-              <PaymentTimeline events={events} />
+            <DetailPanel
+              title="Payment timeline"
+              footer={
+                eventsError ? (
+                  <p className="mt-4 text-sm text-danger">
+                    Could not load timeline data. {errorMessage(eventsError)}
+                  </p>
+                ) : undefined
+              }
+            >
+              {isEventsPending ? <PanelSkeleton /> : <PaymentTimeline events={events} />}
             </DetailPanel>
 
             <div className="space-y-6">
-              <DetailPanel title="Events">
-                <PaymentEventsList events={events} />
+              <DetailPanel
+                title="Events"
+                footer={
+                  eventsError ? (
+                    <p className="mt-4 text-sm text-danger">
+                      Could not load events. {errorMessage(eventsError)}
+                    </p>
+                  ) : undefined
+                }
+              >
+                {isEventsPending ? <PanelSkeleton /> : <PaymentEventsList events={events} />}
               </DetailPanel>
-              <DetailPanel title="Logs">
-                <PaymentLogsList logs={logs} />
+              <DetailPanel
+                title="Logs"
+                footer={
+                  logsError ? (
+                    <p className="mt-4 text-sm text-danger">
+                      Could not load logs. {errorMessage(logsError)}
+                    </p>
+                  ) : undefined
+                }
+              >
+                {isLogsPending ? <PanelSkeleton /> : <PaymentLogsList logs={logs} />}
               </DetailPanel>
             </div>
           </div>

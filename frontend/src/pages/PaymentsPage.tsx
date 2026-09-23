@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { ApiError } from "../api/client";
 import { PaymentSearch } from "../components/payments/PaymentSearch";
 import { PaymentTable } from "../components/payments/PaymentTable";
 import { PaymentTableSkeleton } from "../components/payments/PaymentTableSkeleton";
@@ -52,7 +53,8 @@ export function PaymentsPage() {
         {paymentsQuery.isError && !paymentsQuery.data && (
           <p className="px-5 py-8 text-sm text-danger">
             Could not load payments.{" "}
-            {paymentsQuery.error instanceof Error
+            {paymentsQuery.error instanceof ApiError ||
+            paymentsQuery.error instanceof Error
               ? paymentsQuery.error.message
               : "Request failed"}
           </p>
