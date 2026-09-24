@@ -869,10 +869,10 @@ Milestone:
 
 ## Day 8
 
--   [ ] Connect LLM
--   [ ] Create model adapter
--   [ ] Test basic prompt
--   [ ] Add environment configuration
+-   [x] Connect LLM
+-   [x] Create model adapter
+-   [x] Test basic prompt
+-   [x] Add environment configuration
 
 Goal:
 
