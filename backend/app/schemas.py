@@ -65,6 +65,24 @@ class DocumentRead(BaseModel):
     created_at: datetime
 
 
+class InvestigationQueryRequest(BaseModel):
+    payment_id: str = Field(min_length=1)
+    question: str = Field(min_length=1)
+
+
+class ToolExecutionStep(BaseModel):
+    tool: str
+    arguments: dict[str, Any]
+    result: Any
+
+
+class InvestigationQueryResponse(BaseModel):
+    answer: str
+    steps: list[ToolExecutionStep]
+    model: str
+    provider: str
+
+
 class InvestigationRead(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 

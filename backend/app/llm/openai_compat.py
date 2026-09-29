@@ -4,7 +4,13 @@ import httpx
 
 from app.llm.base import LLMClient
 from app.llm.exceptions import LLMConfigurationError, LLMRequestError
-from app.llm.types import ChatCompletionRequest, ChatCompletionResult
+from app.llm.serialization import chat_message_to_payload
+from app.llm.types import (
+    AssistantMessage,
+    ChatCompletionRequest,
+    ChatCompletionResponse,
+    ToolCall,
+)
 
 
 class OpenAICompatibleClient(LLMClient):
@@ -33,7 +39,7 @@ class OpenAICompatibleClient(LLMClient):
     def provider(self) -> str:
         return self._provider
 
-    def complete(self, request: ChatCompletionRequest) -> ChatCompletionResult:
+    def chat_completion(self, request: ChatCompletionRequest) -> ChatCompletionResponse:
         if not request.messages:
             raise LLMRequestError("At least one message is required.")
 
@@ -43,10 +49,12 @@ class OpenAICompatibleClient(LLMClient):
 
         payload: dict[str, Any] = {
             "model": self._model,
-            "messages": [message.model_dump() for message in request.messages],
+            "messages": [chat_message_to_payload(message) for message in request.messages],
         }
         if request.temperature is not None:
             payload["temperature"] = request.temperature
+        if request.tools:
+            payload["tools"] = request.tools
 
         url = f"{self._base_url}/chat/completions"
         try:
@@ -60,15 +68,39 @@ class OpenAICompatibleClient(LLMClient):
 
         try:
             data = response.json()
-            content = data["choices"][0]["message"]["content"]
+            message = data["choices"][0]["message"]
+            tool_calls = _parse_tool_calls(message.get("tool_calls"))
+            content = message.get("content")
+            if content is not None and not isinstance(content, str):
+                raise LLMRequestError("LLM response content must be a string.")
         except (KeyError, IndexError, TypeError, ValueError) as exc:
-            raise LLMRequestError("LLM response was missing chat completion content.") from exc
+            raise LLMRequestError("LLM response was missing assistant message.") from exc
 
-        if not isinstance(content, str) or not content.strip():
+        if (not content or not str(content).strip()) and not tool_calls:
             raise LLMRequestError("LLM returned empty content.")
 
-        return ChatCompletionResult(
-            content=content,
+        return ChatCompletionResponse(
+            message=AssistantMessage(
+                content=content,
+                tool_calls=tool_calls,
+            ),
             model=str(data.get("model", self._model)),
             provider=self._provider,
         )
+
+
+def _parse_tool_calls(raw_tool_calls: Any) -> list[ToolCall]:
+    if not raw_tool_calls:
+        return []
+
+    tool_calls: list[ToolCall] = []
+    for item in raw_tool_calls:
+        function = item.get("function", {})
+        tool_calls.append(
+            ToolCall(
+                id=str(item["id"]),
+                name=str(function["name"]),
+                arguments=str(function.get("arguments", "{}")),
+            )
+        )
+    return tool_calls

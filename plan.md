@@ -893,9 +893,9 @@ Backend can communicate with model
 
 ## Day 10
 
--   [ ] Implement basic tool calling
--   [ ] Let model choose tools
--   [ ] Return tool results to model
+-   [x] Implement basic tool calling
+-   [x] Let model choose tools
+-   [x] Return tool results to model
 
 Goal:
 
