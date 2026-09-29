@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { Link, useParams } from "react-router-dom";
-import { ApiError } from "../api/client";
 import { DEFAULT_QUESTION } from "../api/investigations";
+import { InvestigationErrorAlert } from "../components/investigation/InvestigationErrorAlert";
 import { InvestigationHistory } from "../components/investigation/InvestigationHistory";
 import { InvestigationProgress } from "../components/investigation/InvestigationProgress";
 import { InvestigationResults } from "../components/investigation/InvestigationResults";
@@ -10,14 +10,8 @@ import { useInvestigation } from "../hooks/useInvestigation";
 import { useInvestigationHistory } from "../hooks/useInvestigationHistory";
 import { useInvestigationProgress } from "../hooks/useInvestigationProgress";
 import { usePaymentDetail } from "../hooks/usePaymentDetail";
+import { isApiErrorCode } from "../lib/apiErrors";
 import { formatAmount } from "../lib/format";
-
-function errorMessage(error: unknown): string {
-  if (error instanceof ApiError || error instanceof Error) {
-    return error.message;
-  }
-  return "Request failed";
-}
 
 export function InvestigationPage() {
   const { paymentId } = useParams<{ paymentId: string }>();
@@ -165,9 +159,19 @@ export function InvestigationPage() {
             )}
 
             {isError && (
-              <div className="rounded-3xl border border-danger/30 bg-danger-soft px-5 py-4 text-sm text-danger">
-                Investigation failed. {errorMessage(error)}
-              </div>
+              <InvestigationErrorAlert
+                error={error}
+                footer={
+                  isApiErrorCode(error, "payment_not_found") ? (
+                    <Link
+                      to="/"
+                      className="text-sm font-medium text-accent no-underline hover:underline"
+                    >
+                      Search the ledger
+                    </Link>
+                  ) : undefined
+                }
+              />
             )}
 
             {result && !isRunning && (
@@ -193,6 +197,7 @@ export function InvestigationPage() {
                     sources: result.sources,
                     model: result.model,
                     provider: result.provider,
+                    insufficient_evidence: result.insufficient_evidence,
                   }}
                 />
               </>

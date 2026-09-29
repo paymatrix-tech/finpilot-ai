@@ -1,9 +1,11 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
-from app.db import get_session
+from app.api_errors import database_error, llm_request_failed, llm_unavailable
+from app.db import check_database, get_session
 from app.llm.base import LLMClient
 from app.llm.exceptions import LLMConfigurationError, LLMRequestError
 from app.llm.factory import get_llm_client
@@ -51,16 +53,26 @@ def _run_investigation(
     payment_id: str,
     question: str,
 ) -> InvestigationQueryResponse:
+    if not check_database():
+        raise database_error()
+
+    store.require_payment(payment_id)
+
     try:
         response = agent.investigate(payment_id, question)
     except LLMConfigurationError as exc:
-        raise HTTPException(status_code=503, detail=str(exc)) from exc
+        raise llm_unavailable(str(exc)) from exc
     except LLMRequestError as exc:
-        raise HTTPException(status_code=502, detail=str(exc)) from exc
+        raise llm_request_failed(str(exc)) from exc
 
-    record = store.save(response)
-    session.commit()
-    session.refresh(record)
+    try:
+        record = store.save(response)
+        session.commit()
+        session.refresh(record)
+    except SQLAlchemyError as exc:
+        session.rollback()
+        raise database_error() from exc
+
     return response.model_copy(update={"id": record.id})
 
 
@@ -69,6 +81,8 @@ def get_investigation(
     investigation_id: int,
     store: Annotated[InvestigationStoreService, Depends(get_investigation_store)],
 ) -> InvestigationRead:
+    if not check_database():
+        raise database_error()
     return store.get(investigation_id)
 
 

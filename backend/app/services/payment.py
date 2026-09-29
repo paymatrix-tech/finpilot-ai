@@ -1,5 +1,4 @@
-from fastapi import HTTPException, status
-
+from app.api_errors import payment_not_found
 from app.models import Payment, PaymentEvent, PaymentLog
 from app.repositories.payment import PaymentRepository
 
@@ -20,10 +19,7 @@ class PaymentService:
     def get_payment(self, payment_id: str) -> Payment:
         payment = self.repository.get_by_id(payment_id)
         if payment is None:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Payment {payment_id} was not found.",
-            )
+            raise payment_not_found(payment_id)
         return payment
 
     def get_payment_events(self, payment_id: str) -> list[PaymentEvent]:

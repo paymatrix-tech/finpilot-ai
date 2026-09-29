@@ -1,6 +1,9 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+from sqlalchemy.exc import SQLAlchemyError
 
+from app.api_errors import database_unavailable_exception
 from app.db import check_database
 from app.routers.investigation import router as investigation_router
 from app.routers.llm import router as llm_router
@@ -23,6 +26,15 @@ app.add_middleware(
 app.include_router(payments_router)
 app.include_router(llm_router)
 app.include_router(investigation_router)
+
+
+@app.exception_handler(SQLAlchemyError)
+async def sqlalchemy_exception_handler(
+    _request: Request,
+    exc: SQLAlchemyError,
+) -> JSONResponse:
+    http_exc = database_unavailable_exception(exc)
+    return JSONResponse(status_code=http_exc.status_code, content={"detail": http_exc.detail})
 
 
 @app.get("/health")

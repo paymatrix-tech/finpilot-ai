@@ -52,6 +52,13 @@ class InvestigationRCA(BaseModel):
         parts.append(f"Recommendation: {self.recommendation}")
         return " ".join(parts)
 
+    def has_insufficient_evidence(self) -> bool:
+        if "insufficient evidence" in self.root_cause.lower():
+            return True
+        if self.normalized_confidence() == "low" and len(self.evidence) == 0:
+            return True
+        return False
+
 
 def generate_structured_rca(
     llm: LLMClient,

@@ -992,11 +992,11 @@ Example:
 
 ## Day 18
 
--   [ ] Improve error handling
--   [ ] Handle payment not found
--   [ ] Handle model failure
--   [ ] Handle database failure
--   [ ] Handle insufficient evidence
+-   [x] Improve error handling
+-   [x] Handle payment not found
+-   [x] Handle model failure
+-   [x] Handle database failure
+-   [x] Handle insufficient evidence
 
 ------------------------------------------------------------------------
 

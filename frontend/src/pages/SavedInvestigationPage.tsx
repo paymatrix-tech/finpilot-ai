@@ -1,19 +1,15 @@
 import { Link, useParams } from "react-router-dom";
 import { ApiError } from "../api/client";
+import { InvestigationErrorAlert } from "../components/investigation/InvestigationErrorAlert";
 import { InvestigationHistory } from "../components/investigation/InvestigationHistory";
 import { InvestigationResults } from "../components/investigation/InvestigationResults";
 import { PaymentStatusBadge } from "../components/payments/PaymentStatusBadge";
 import { useInvestigationHistory } from "../hooks/useInvestigationHistory";
 import { usePaymentDetail } from "../hooks/usePaymentDetail";
 import { useSavedInvestigation } from "../hooks/useSavedInvestigation";
+import { isApiErrorCode } from "../lib/apiErrors";
+import { isInsufficientEvidence } from "../lib/investigationOutcome";
 import { formatAmount, formatDateTime } from "../lib/format";
-
-function errorMessage(error: unknown): string {
-  if (error instanceof ApiError || error instanceof Error) {
-    return error.message;
-  }
-  return "Request failed";
-}
 
 export function SavedInvestigationPage() {
   const { paymentId, investigationId: investigationIdParam } = useParams<{
@@ -89,9 +85,14 @@ export function SavedInvestigationPage() {
           )}
 
           {savedQuery.isError && !notFound && (
-            <p className="text-sm text-danger">
-              Could not load investigation. {errorMessage(savedQuery.error)}
-            </p>
+            <InvestigationErrorAlert
+              error={savedQuery.error}
+              footer={
+                isApiErrorCode(savedQuery.error, "database_error") ? (
+                  <p className="text-xs text-muted">The API health indicator in the header shows database status.</p>
+                ) : undefined
+              }
+            />
           )}
 
           {savedQuery.data && (
@@ -102,6 +103,11 @@ export function SavedInvestigationPage() {
                 confidence: savedQuery.data.confidence ?? "low",
                 evidence: savedQuery.data.evidence,
                 recommendation: savedQuery.data.recommendation ?? "No recommendation recorded.",
+                insufficient_evidence: isInsufficientEvidence(
+                  savedQuery.data.root_cause,
+                  savedQuery.data.confidence,
+                  savedQuery.data.evidence,
+                ),
               }}
             />
           )}

@@ -1,4 +1,5 @@
 import { ConfidenceBadge } from "./ConfidenceBadge";
+import { InsufficientEvidenceBanner } from "./InsufficientEvidenceBanner";
 
 export type InvestigationResultsData = {
   question: string;
@@ -9,6 +10,7 @@ export type InvestigationResultsData = {
   sources?: string[];
   model?: string;
   provider?: string;
+  insufficient_evidence?: boolean;
 };
 
 type InvestigationResultsProps = {
@@ -22,6 +24,7 @@ export function InvestigationResults({ data }: InvestigationResultsProps) {
 
   return (
     <div className="space-y-6">
+      {data.insufficient_evidence && <InsufficientEvidenceBanner />}
       <section
         className="rounded-3xl border border-accent/25 bg-accent-soft/40 p-5 sm:p-6"
         aria-labelledby="root-cause-heading"

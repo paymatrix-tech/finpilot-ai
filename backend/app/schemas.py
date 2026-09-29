@@ -116,6 +116,7 @@ class InvestigationQueryResponse(BaseModel):
     steps: list[ToolExecutionStep]
     model: str
     provider: str
+    insufficient_evidence: bool = False
 
 
 class InvestigationRead(BaseModel):

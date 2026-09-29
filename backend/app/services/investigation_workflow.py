@@ -23,4 +23,5 @@ def build_investigation_response(
         steps=steps,
         model=model,
         provider=provider,
+        insufficient_evidence=rca.has_insufficient_evidence(),
     )

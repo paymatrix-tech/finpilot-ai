@@ -32,6 +32,7 @@ export type InvestigationResult = {
   steps: ToolExecutionStep[];
   model: string;
   provider: string;
+  insufficient_evidence: boolean;
 };
 
 export type CreateInvestigationRequest = {

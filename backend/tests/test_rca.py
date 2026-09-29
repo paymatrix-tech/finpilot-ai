@@ -36,3 +36,25 @@ def test_investigation_rca_to_answer() -> None:
     )
     assert "Gateway timeout" in rca.to_answer()
     assert "Retry with backoff" in rca.to_answer()
+
+
+def test_has_insufficient_evidence_detects_low_confidence_without_facts() -> None:
+    rca = InvestigationRCA(
+        root_cause="Insufficient evidence to determine the root cause.",
+        confidence="low",
+        evidence=[],
+        recommendation="Gather more logs and retry.",
+        sources=[],
+    )
+    assert rca.has_insufficient_evidence() is True
+
+
+def test_has_insufficient_evidence_false_when_evidence_present() -> None:
+    rca = InvestigationRCA(
+        root_cause="Gateway timeout",
+        confidence="low",
+        evidence=["Read timeout in payments-api logs"],
+        recommendation="Retry with backoff",
+        sources=[],
+    )
+    assert rca.has_insufficient_evidence() is False
