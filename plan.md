@@ -913,11 +913,11 @@ Answer
 
 ## Day 11
 
--   [ ] Create documentation
--   [ ] Create 5--10 Markdown files
--   [ ] Add payment error information
--   [ ] Add retry policy
--   [ ] Add gateway information
+-   [x] Create documentation
+-   [x] Create 5--10 Markdown files
+-   [x] Add payment error information
+-   [x] Add retry policy
+-   [x] Add gateway information
 
 ------------------------------------------------------------------------
 
