@@ -65,6 +65,54 @@ class DocumentRead(BaseModel):
     created_at: datetime
 
 
+class DocumentationSourceReference(BaseModel):
+    document_id: int
+    document_name: str
+    category: str
+    section_heading: str | None = None
+    chunk_index: int | None = None
+
+
+class PaymentDocSearchResult(BaseModel):
+    chunk_id: int
+    content: str
+    similarity: float
+    source: DocumentationSourceReference
+
+
+class InvestigationQueryRequest(BaseModel):
+    payment_id: str = Field(min_length=1)
+    question: str = Field(min_length=1)
+
+
+class ToolExecutionStep(BaseModel):
+    tool: str
+    arguments: dict[str, Any]
+    result: Any
+
+
+class InvestigationCreateRequest(BaseModel):
+    payment_id: str = Field(min_length=1)
+    question: str = Field(
+        default="Why did this payment fail?",
+        min_length=1,
+    )
+
+
+class InvestigationQueryResponse(BaseModel):
+    payment_id: str
+    question: str
+    root_cause: str
+    confidence: str
+    evidence: list[str]
+    recommendation: str
+    sources: list[str]
+    answer: str
+    steps: list[ToolExecutionStep]
+    model: str
+    provider: str
+
+
 class InvestigationRead(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 

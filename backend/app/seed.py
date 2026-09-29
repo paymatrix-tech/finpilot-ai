@@ -9,6 +9,7 @@ from sqlalchemy import delete
 from sqlalchemy.orm import Session
 
 from app.db import SessionLocal
+from app.documentation.seed import seed_documents
 from app.models import Payment, PaymentEvent, PaymentLog
 
 GATEWAY = "ExamplePay"
@@ -518,7 +519,12 @@ def main() -> None:
     session = SessionLocal()
     try:
         created = seed_database(session)
+        from app.documentation.indexing import chunk_count
+
+        doc_count = seed_documents(session)
+        chunks = chunk_count(session)
         print(f"Seeded {created} synthetic payments.")
+        print(f"Loaded {doc_count} documentation files from docs/ ({chunks} embedded chunks).")
     finally:
         session.close()
 

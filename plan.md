@@ -869,10 +869,10 @@ Milestone:
 
 ## Day 8
 
--   [ ] Connect LLM
--   [ ] Create model adapter
--   [ ] Test basic prompt
--   [ ] Add environment configuration
+-   [x] Connect LLM
+-   [x] Create model adapter
+-   [x] Test basic prompt
+-   [x] Add environment configuration
 
 Goal:
 
@@ -884,18 +884,18 @@ Backend can communicate with model
 
 ## Day 9
 
--   [ ] Implement `get_payment`
--   [ ] Implement `get_events`
--   [ ] Implement `search_logs`
--   [ ] Test tools independently
+-   [x] Implement `get_payment`
+-   [x] Implement `get_events`
+-   [x] Implement `search_logs`
+-   [x] Test tools independently
 
 ------------------------------------------------------------------------
 
 ## Day 10
 
--   [ ] Implement basic tool calling
--   [ ] Let model choose tools
--   [ ] Return tool results to model
+-   [x] Implement basic tool calling
+-   [x] Let model choose tools
+-   [x] Return tool results to model
 
 Goal:
 
@@ -913,36 +913,36 @@ Answer
 
 ## Day 11
 
--   [ ] Create documentation
--   [ ] Create 5--10 Markdown files
--   [ ] Add payment error information
--   [ ] Add retry policy
--   [ ] Add gateway information
+-   [x] Create documentation
+-   [x] Create 5--10 Markdown files
+-   [x] Add payment error information
+-   [x] Add retry policy
+-   [x] Add gateway information
 
 ------------------------------------------------------------------------
 
 ## Day 12
 
--   [ ] Configure pgvector
--   [ ] Implement document chunking
--   [ ] Generate embeddings
--   [ ] Store embeddings
+-   [x] Configure pgvector
+-   [x] Implement document chunking
+-   [x] Generate embeddings
+-   [x] Store embeddings
 
 ------------------------------------------------------------------------
 
 ## Day 13
 
--   [ ] Implement `search_payment_docs`
--   [ ] Test semantic search
--   [ ] Add source references
+-   [x] Implement `search_payment_docs`
+-   [x] Test semantic search
+-   [x] Add source references
 
 ------------------------------------------------------------------------
 
 ## Day 14
 
--   [ ] Combine all tools
--   [ ] Implement investigation workflow
--   [ ] Generate structured RCA
+-   [x] Combine all tools
+-   [x] Implement investigation workflow
+-   [x] Generate structured RCA
 
 Milestone:
 
