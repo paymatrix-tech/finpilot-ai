@@ -2,12 +2,18 @@ import json
 from typing import Any
 
 from app.tools.exceptions import PaymentNotFoundError, ToolError
+from app.tools.documentation import DocumentationTools
 from app.tools.payment import PaymentTools
 
 
 class PaymentToolExecutor:
-    def __init__(self, tools: PaymentTools) -> None:
+    def __init__(
+        self,
+        tools: PaymentTools,
+        documentation_tools: DocumentationTools | None = None,
+    ) -> None:
         self._tools = tools
+        self._documentation_tools = documentation_tools
 
     def execute(self, name: str, arguments: dict[str, Any]) -> Any:
         try:
@@ -27,6 +33,16 @@ class PaymentToolExecutor:
                     raise ToolError("search_logs query must be a string when provided.")
                 logs = self._tools.search_logs(payment_id, query=query)
                 return [log.model_dump(mode="json") for log in logs]
+
+            if name == "search_payment_docs":
+                if self._documentation_tools is None:
+                    raise ToolError("Documentation search is not configured.")
+                query = _require_str(arguments, "query")
+                limit = arguments.get("limit", 5)
+                if not isinstance(limit, int):
+                    raise ToolError("search_payment_docs limit must be an integer when provided.")
+                results = self._documentation_tools.search_payment_docs(query, limit=limit)
+                return [result.model_dump(mode="json") for result in results]
 
             raise ToolError(f"Unknown tool '{name}'.")
         except PaymentNotFoundError as exc:

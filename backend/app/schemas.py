@@ -65,6 +65,21 @@ class DocumentRead(BaseModel):
     created_at: datetime
 
 
+class DocumentationSourceReference(BaseModel):
+    document_id: int
+    document_name: str
+    category: str
+    section_heading: str | None = None
+    chunk_index: int | None = None
+
+
+class PaymentDocSearchResult(BaseModel):
+    chunk_id: int
+    content: str
+    similarity: float
+    source: DocumentationSourceReference
+
+
 class InvestigationQueryRequest(BaseModel):
     payment_id: str = Field(min_length=1)
     question: str = Field(min_length=1)

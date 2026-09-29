@@ -32,7 +32,7 @@ class SequenceLLM(LLMClient):
         response = self._responses[self.calls]
         self.calls += 1
         if request.tools:
-            assert len(request.tools) == 3
+            assert len(request.tools) == 4
         return response
 
 

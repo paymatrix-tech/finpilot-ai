@@ -932,9 +932,9 @@ Answer
 
 ## Day 13
 
--   [ ] Implement `search_payment_docs`
--   [ ] Test semantic search
--   [ ] Add source references
+-   [x] Implement `search_payment_docs`
+-   [x] Test semantic search
+-   [x] Add source references
 
 ------------------------------------------------------------------------
 

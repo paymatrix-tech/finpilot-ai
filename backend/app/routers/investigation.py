@@ -7,9 +7,11 @@ from app.db import get_session
 from app.llm.base import LLMClient
 from app.llm.exceptions import LLMConfigurationError, LLMRequestError
 from app.llm.factory import get_llm_client
+from app.repositories.documentation import DocumentationRepository
 from app.repositories.payment import PaymentRepository
 from app.schemas import InvestigationQueryRequest, InvestigationQueryResponse
 from app.services.investigation_agent import InvestigationAgent
+from app.tools.documentation import DocumentationTools
 from app.tools.executor import PaymentToolExecutor
 from app.tools.payment import PaymentTools
 
@@ -20,8 +22,10 @@ def get_investigation_agent(
     session: Annotated[Session, Depends(get_session)],
     llm: Annotated[LLMClient, Depends(get_llm_client)],
 ) -> InvestigationAgent:
-    tools = PaymentTools(PaymentRepository(session))
-    return InvestigationAgent(llm, PaymentToolExecutor(tools))
+    payment_tools = PaymentTools(PaymentRepository(session))
+    documentation_tools = DocumentationTools(DocumentationRepository(session))
+    executor = PaymentToolExecutor(payment_tools, documentation_tools)
+    return InvestigationAgent(llm, executor)
 
 
 @router.post("/query", response_model=InvestigationQueryResponse)

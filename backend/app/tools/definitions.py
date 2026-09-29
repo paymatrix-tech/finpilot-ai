@@ -56,4 +56,30 @@ PAYMENT_INVESTIGATION_TOOLS: list[dict[str, Any]] = [
             },
         },
     },
+    {
+        "type": "function",
+        "function": {
+            "name": "search_payment_docs",
+            "description": (
+                "Search internal payment operations documentation for policies, error codes, "
+                "gateway runbooks, and retry guidance. Returns content with source references."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "query": {
+                        "type": "string",
+                        "description": "Natural language or keyword query, for example R01 retry policy.",
+                    },
+                    "limit": {
+                        "type": "integer",
+                        "description": "Maximum number of documentation chunks to return (default 5).",
+                        "minimum": 1,
+                        "maximum": 10,
+                    },
+                },
+                "required": ["query"],
+            },
+        },
+    },
 ]
