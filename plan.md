@@ -884,10 +884,10 @@ Backend can communicate with model
 
 ## Day 9
 
--   [ ] Implement `get_payment`
--   [ ] Implement `get_events`
--   [ ] Implement `search_logs`
--   [ ] Test tools independently
+-   [x] Implement `get_payment`
+-   [x] Implement `get_events`
+-   [x] Implement `search_logs`
+-   [x] Test tools independently
 
 ------------------------------------------------------------------------
 

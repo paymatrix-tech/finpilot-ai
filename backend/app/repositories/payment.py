@@ -52,6 +52,28 @@ class PaymentRepository:
         )
         return list(self.session.scalars(statement).all())
 
+    def search_logs(
+        self,
+        payment_id: str,
+        *,
+        query: str | None = None,
+        limit: int = 50,
+    ) -> list[PaymentLog]:
+        statement = select(PaymentLog).where(PaymentLog.payment_id == payment_id)
+
+        if query:
+            pattern = f"%{query.strip()}%"
+            statement = statement.where(
+                or_(
+                    PaymentLog.message.ilike(pattern),
+                    PaymentLog.service.ilike(pattern),
+                    PaymentLog.level.ilike(pattern),
+                )
+            )
+
+        statement = statement.order_by(PaymentLog.created_at.asc()).limit(limit)
+        return list(self.session.scalars(statement).all())
+
     def add(self, payment: Payment) -> Payment:
         self.session.add(payment)
         return payment
