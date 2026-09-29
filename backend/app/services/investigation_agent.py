@@ -9,26 +9,13 @@ from app.llm.types import (
     ToolCall,
 )
 from app.schemas import InvestigationQueryResponse, ToolExecutionStep
+from app.prompts.investigation import INVESTIGATION_SYSTEM_PROMPT
+from app.services.evidence_requirements import apply_evidence_requirements
 from app.services.investigation_workflow import build_investigation_response
 from app.services.rca import generate_structured_rca
 from app.tools.definitions import PAYMENT_INVESTIGATION_TOOLS
 from app.tools.executor import PaymentToolExecutor, parse_tool_arguments
 from app.tools.exceptions import ToolError
-
-INVESTIGATION_SYSTEM_PROMPT = """You are FinPilot, a payment investigation assistant.
-
-Gather evidence using the available tools before the RCA step runs.
-You have four tools: get_payment, get_payment_events, search_logs, and search_payment_docs.
-
-Workflow:
-1. Confirm payment details with get_payment.
-2. Review lifecycle with get_payment_events when the failure path is unclear.
-3. Search logs for gateway responses, errors, and timeouts.
-4. Search internal documentation for error codes, retry policy, and gateway guidance.
-
-Only call tools you need, but ensure you have enough evidence for a root-cause analysis.
-Do not invent payment data. Do not produce the final RCA JSON yourself."""
-
 
 class InvestigationAgent:
     def __init__(
@@ -50,7 +37,8 @@ class InvestigationAgent:
                 content=(
                     f"Payment ID: {payment_id}\n"
                     f"Question: {question}\n"
-                    "Use tools to gather payment facts, events, logs, and documentation."
+                    "Investigate using tools. Collect observed facts for a later RCA "
+                    "(payment record, events, logs, and docs as needed)."
                 ),
             ),
         ]
@@ -61,6 +49,7 @@ class InvestigationAgent:
             payment_id=payment_id,
             question=question,
         )
+        rca = apply_evidence_requirements(rca, steps=steps)
         return build_investigation_response(
             payment_id=payment_id,
             question=question,

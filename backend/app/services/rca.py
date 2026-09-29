@@ -2,34 +2,14 @@ import json
 import re
 from typing import Any
 
-from pydantic import BaseModel, Field, ValidationError
+from pydantic import BaseModel, Field, ValidationError, field_validator
 
 from app.llm.base import LLMClient
 from app.llm.exceptions import LLMRequestError
 from app.llm.types import ChatCompletionRequest, ChatMessage
+from app.prompts.investigation import RCA_JSON_MARKER, RCA_SYSTEM_PROMPT
 
-RCA_JSON_MARKER = "Return only valid JSON matching the schema below."
-
-RCA_SYSTEM_PROMPT = f"""You are FinPilot's RCA generator.
-
-You receive tool results from a payment investigation. Produce a final root-cause analysis.
-
-Rules:
-- Only use facts supported by the tool results shown in the conversation.
-- Separate observed facts (evidence) from your conclusion (root_cause).
-- If tool results are missing or contradictory, set root_cause to
-  "Insufficient evidence to determine the root cause." and confidence to "low".
-- List documentation file names in sources when documentation search was used.
-- {RCA_JSON_MARKER}
-
-Schema:
-{{
-  "root_cause": "string",
-  "confidence": "low" | "medium" | "high",
-  "evidence": ["string"],
-  "recommendation": "string",
-  "sources": ["string"]
-}}"""
+RCA_SYSTEM_PROMPT_EXPORT = RCA_SYSTEM_PROMPT  # backwards compatibility for imports
 
 
 class InvestigationRCA(BaseModel):
@@ -38,6 +18,15 @@ class InvestigationRCA(BaseModel):
     evidence: list[str] = Field(default_factory=list)
     recommendation: str = Field(min_length=1)
     sources: list[str] = Field(default_factory=list)
+
+    @field_validator("evidence", "sources", mode="before")
+    @classmethod
+    def coerce_string_list(cls, value: Any) -> list[str]:
+        if value is None:
+            return []
+        if isinstance(value, list):
+            return [str(item).strip() for item in value if str(item).strip()]
+        return []
 
     def normalized_confidence(self) -> str:
         value = self.confidence.strip().lower()
@@ -75,6 +64,8 @@ def generate_structured_rca(
             content=(
                 f"Payment ID: {payment_id}\n"
                 f"Question: {question}\n"
+                "Summarize only from tool results above. "
+                "Include at least two evidence bullets when confidence is high.\n"
                 f"{RCA_JSON_MARKER}"
             ),
         ),

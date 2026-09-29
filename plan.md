@@ -1002,10 +1002,10 @@ Example:
 
 ## Day 19
 
--   [ ] Improve AI prompts
--   [ ] Improve tool descriptions
--   [ ] Improve structured response
--   [ ] Add evidence requirements
+-   [x] Improve AI prompts
+-   [x] Improve tool descriptions
+-   [x] Improve structured response
+-   [x] Add evidence requirements
 
 ------------------------------------------------------------------------
 
