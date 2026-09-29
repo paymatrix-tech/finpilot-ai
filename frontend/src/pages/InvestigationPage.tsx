@@ -3,8 +3,10 @@ import { Link, useParams } from "react-router-dom";
 import { ApiError } from "../api/client";
 import { DEFAULT_QUESTION } from "../api/investigations";
 import { ConfidenceBadge } from "../components/investigation/ConfidenceBadge";
+import { InvestigationProgress } from "../components/investigation/InvestigationProgress";
 import { PaymentStatusBadge } from "../components/payments/PaymentStatusBadge";
 import { useInvestigation } from "../hooks/useInvestigation";
+import { useInvestigationProgress } from "../hooks/useInvestigationProgress";
 import { usePaymentDetail } from "../hooks/usePaymentDetail";
 import { formatAmount } from "../lib/format";
 
@@ -13,17 +15,6 @@ function errorMessage(error: unknown): string {
     return error.message;
   }
   return "Request failed";
-}
-
-function InvestigationSkeleton() {
-  return (
-    <div className="animate-pulse space-y-6">
-      <div className="h-8 w-2/3 rounded-lg bg-line/60" />
-      <div className="h-24 rounded-3xl bg-line/40" />
-      <div className="h-32 rounded-3xl bg-line/40" />
-      <div className="h-20 rounded-3xl bg-line/30" />
-    </div>
-  );
 }
 
 export function InvestigationPage() {
@@ -39,6 +30,11 @@ export function InvestigationPage() {
     isError,
     error,
   } = useInvestigation();
+
+  const { steps: progressSteps, isLive: progressIsLive } = useInvestigationProgress(
+    isRunning,
+    result?.steps,
+  );
 
   useEffect(() => {
     if (!paymentId || autoStarted.current) {
@@ -97,7 +93,15 @@ export function InvestigationPage() {
         )}
       </header>
 
-      {isPaymentPending && <InvestigationSkeleton />}
+      {isPaymentPending && (
+        <div className="animate-pulse rounded-3xl border border-line bg-panel p-6">
+          <div className="h-4 w-40 rounded bg-line/60" />
+          <div className="mt-6 space-y-4">
+            <div className="h-4 w-3/4 rounded bg-line/40" />
+            <div className="h-4 w-2/3 rounded bg-line/30" />
+          </div>
+        </div>
+      )}
 
       {!isPaymentPending && notFound && (
         <div className="rounded-3xl border border-line bg-panel px-6 py-10 text-center">
@@ -140,19 +144,18 @@ export function InvestigationPage() {
               >
                 {isRunning ? "Investigating…" : result ? "Run again" : "Investigate"}
               </button>
-              {isRunning && (
-                <p className="text-sm text-muted">This may take a moment while tools run.</p>
-              )}
             </div>
           </form>
+
+          {(isRunning || (result && progressSteps.length > 0)) && (
+            <InvestigationProgress steps={progressSteps} isLive={progressIsLive} />
+          )}
 
           {isError && (
             <div className="rounded-3xl border border-danger/30 bg-danger-soft px-5 py-4 text-sm text-danger">
               Investigation failed. {errorMessage(error)}
             </div>
           )}
-
-          {isRunning && !result && <InvestigationSkeleton />}
 
           {result && !isRunning && (
             <div className="space-y-6">

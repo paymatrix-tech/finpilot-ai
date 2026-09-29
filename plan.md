@@ -966,9 +966,9 @@ Milestone:
 
 ## Day 16
 
--   [ ] Add investigation progress
--   [ ] Show tool execution steps
--   [ ] Add loading state
+-   [x] Add investigation progress
+-   [x] Show tool execution steps
+-   [x] Add loading state
 
 Example:
 
