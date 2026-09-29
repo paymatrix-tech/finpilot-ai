@@ -99,7 +99,12 @@ class InvestigationCreateRequest(BaseModel):
     )
 
 
+class InvestigationListResponse(BaseModel):
+    items: list["InvestigationRead"]
+
+
 class InvestigationQueryResponse(BaseModel):
+    id: int | None = None
     payment_id: str
     question: str
     root_cause: str

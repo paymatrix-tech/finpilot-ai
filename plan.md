@@ -984,9 +984,9 @@ Example:
 
 ## Day 17
 
--   [ ] Save investigations
--   [ ] Add investigation history
--   [ ] Display previous investigations
+-   [x] Save investigations
+-   [x] Add investigation history
+-   [x] Display previous investigations
 
 ------------------------------------------------------------------------
 

@@ -2,10 +2,12 @@ import { useEffect, useRef, useState, type FormEvent } from "react";
 import { Link, useParams } from "react-router-dom";
 import { ApiError } from "../api/client";
 import { DEFAULT_QUESTION } from "../api/investigations";
-import { ConfidenceBadge } from "../components/investigation/ConfidenceBadge";
+import { InvestigationHistory } from "../components/investigation/InvestigationHistory";
 import { InvestigationProgress } from "../components/investigation/InvestigationProgress";
+import { InvestigationResults } from "../components/investigation/InvestigationResults";
 import { PaymentStatusBadge } from "../components/payments/PaymentStatusBadge";
 import { useInvestigation } from "../hooks/useInvestigation";
+import { useInvestigationHistory } from "../hooks/useInvestigationHistory";
 import { useInvestigationProgress } from "../hooks/useInvestigationProgress";
 import { usePaymentDetail } from "../hooks/usePaymentDetail";
 import { formatAmount } from "../lib/format";
@@ -23,6 +25,7 @@ export function InvestigationPage() {
   const autoStarted = useRef(false);
 
   const { payment, isPaymentPending, notFound } = usePaymentDetail(paymentId);
+  const historyQuery = useInvestigationHistory(paymentId);
   const {
     mutate: runInvestigation,
     isPending: isRunning,
@@ -50,6 +53,7 @@ export function InvestigationPage() {
 
   const resolvedPaymentId = paymentId;
   const detailHref = `/payments/${encodeURIComponent(resolvedPaymentId)}`;
+
   function handleRerun(event: FormEvent) {
     event.preventDefault();
     const trimmed = question.trim();
@@ -58,6 +62,11 @@ export function InvestigationPage() {
     }
     runInvestigation({ paymentId: resolvedPaymentId, question: trimmed });
   }
+
+  const savedHref =
+    result?.id != null
+      ? `/payments/${encodeURIComponent(resolvedPaymentId)}/investigations/${result.id}`
+      : null;
 
   return (
     <div className="space-y-8">
@@ -117,136 +126,88 @@ export function InvestigationPage() {
       )}
 
       {!notFound && (
-        <>
-          <form
-            onSubmit={handleRerun}
-            className="rounded-3xl border border-line bg-panel p-5 shadow-[0_24px_60px_rgba(28,25,21,0.04)] sm:p-6"
-          >
-            <label className="block text-sm font-semibold text-ink" htmlFor="investigation-question">
-              Investigation question
-            </label>
-            <p className="mt-1 text-sm text-muted">
-              FinPilot reads payment data, events, logs, and internal docs to answer this.
-            </p>
-            <textarea
-              id="investigation-question"
-              rows={2}
-              value={question}
-              onChange={(event) => setQuestion(event.target.value)}
-              disabled={isRunning}
-              className="mt-4 w-full resize-y rounded-2xl border border-line bg-page px-4 py-3 text-sm text-ink outline-none transition focus:border-accent focus:ring-2 focus:ring-accent/20 disabled:opacity-60"
-            />
-            <div className="mt-4 flex flex-wrap items-center gap-3">
-              <button
-                type="submit"
-                disabled={isRunning || !question.trim()}
-                className="inline-flex items-center justify-center rounded-full bg-accent px-5 py-2.5 text-sm font-semibold text-panel transition hover:bg-[#0c4a45] disabled:cursor-not-allowed disabled:opacity-50"
+        <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(280px,340px)]">
+          <div className="space-y-6">
+            <form
+              onSubmit={handleRerun}
+              className="rounded-3xl border border-line bg-panel p-5 shadow-[0_24px_60px_rgba(28,25,21,0.04)] sm:p-6"
+            >
+              <label
+                className="block text-sm font-semibold text-ink"
+                htmlFor="investigation-question"
               >
-                {isRunning ? "Investigating…" : result ? "Run again" : "Investigate"}
-              </button>
-            </div>
-          </form>
-
-          {(isRunning || (result && progressSteps.length > 0)) && (
-            <InvestigationProgress steps={progressSteps} isLive={progressIsLive} />
-          )}
-
-          {isError && (
-            <div className="rounded-3xl border border-danger/30 bg-danger-soft px-5 py-4 text-sm text-danger">
-              Investigation failed. {errorMessage(error)}
-            </div>
-          )}
-
-          {result && !isRunning && (
-            <div className="space-y-6">
-              <section
-                className="rounded-3xl border border-accent/25 bg-accent-soft/40 p-5 sm:p-6"
-                aria-labelledby="root-cause-heading"
-              >
-                <div className="flex flex-wrap items-start justify-between gap-3">
-                  <h2 id="root-cause-heading" className="text-sm font-semibold tracking-wide text-ink">
-                    Root cause
-                  </h2>
-                  <ConfidenceBadge confidence={result.confidence} />
-                </div>
-                <p className="mt-3 text-lg font-medium leading-relaxed text-ink">
-                  {result.root_cause}
-                </p>
-              </section>
-
-              <section
-                className="rounded-3xl border border-line bg-panel p-5 sm:p-6"
-                aria-labelledby="question-heading"
-              >
-                <h2 id="question-heading" className="text-sm font-semibold tracking-wide text-ink">
-                  Question
-                </h2>
-                <p className="mt-3 text-base text-ink">{result.question}</p>
-              </section>
-
-              <section
-                className="rounded-3xl border border-line bg-panel p-5 sm:p-6"
-                aria-labelledby="evidence-heading"
-              >
-                <h2 id="evidence-heading" className="text-sm font-semibold tracking-wide text-ink">
-                  Evidence
-                </h2>
-                {result.evidence.length === 0 ? (
-                  <p className="mt-3 text-sm text-muted">No evidence items were returned.</p>
-                ) : (
-                  <ul className="mt-4 list-none space-y-2 p-0">
-                    {result.evidence.map((item, index) => (
-                      <li
-                        key={`${index}-${item.slice(0, 24)}`}
-                        className="flex gap-3 text-sm leading-relaxed text-ink"
-                      >
-                        <span
-                          aria-hidden
-                          className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-accent"
-                        />
-                        <span>{item}</span>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-                {result.sources.length > 0 && (
-                  <div className="mt-5 border-t border-line pt-4">
-                    <p className="text-xs font-semibold tracking-wide text-muted uppercase">
-                      Documentation sources
-                    </p>
-                    <ul className="mt-2 flex flex-wrap gap-2">
-                      {result.sources.map((source) => (
-                        <li
-                          key={source}
-                          className="rounded-full bg-page px-3 py-1 font-mono text-xs text-muted"
-                        >
-                          {source}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-              </section>
-
-              <section
-                className="rounded-3xl border border-line bg-panel p-5 sm:p-6"
-                aria-labelledby="recommendation-heading"
-              >
-                <h2
-                  id="recommendation-heading"
-                  className="text-sm font-semibold tracking-wide text-ink"
-                >
-                  Recommendation
-                </h2>
-                <p className="mt-3 text-base leading-relaxed text-ink">{result.recommendation}</p>
-              </section>
-
-              <p className="text-center text-xs text-muted">
-                Model {result.model} ({result.provider})
+                Investigation question
+              </label>
+              <p className="mt-1 text-sm text-muted">
+                FinPilot reads payment data, events, logs, and internal docs to answer this.
               </p>
-            </div>
-          )}
-        </>
+              <textarea
+                id="investigation-question"
+                rows={2}
+                value={question}
+                onChange={(event) => setQuestion(event.target.value)}
+                disabled={isRunning}
+                className="mt-4 w-full resize-y rounded-2xl border border-line bg-page px-4 py-3 text-sm text-ink outline-none transition focus:border-accent focus:ring-2 focus:ring-accent/20 disabled:opacity-60"
+              />
+              <div className="mt-4 flex flex-wrap items-center gap-3">
+                <button
+                  type="submit"
+                  disabled={isRunning || !question.trim()}
+                  className="inline-flex items-center justify-center rounded-full bg-accent px-5 py-2.5 text-sm font-semibold text-panel transition hover:bg-[#0c4a45] disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {isRunning ? "Investigating…" : result ? "Run again" : "Investigate"}
+                </button>
+              </div>
+            </form>
+
+            {(isRunning || (result && progressSteps.length > 0)) && (
+              <InvestigationProgress steps={progressSteps} isLive={progressIsLive} />
+            )}
+
+            {isError && (
+              <div className="rounded-3xl border border-danger/30 bg-danger-soft px-5 py-4 text-sm text-danger">
+                Investigation failed. {errorMessage(error)}
+              </div>
+            )}
+
+            {result && !isRunning && (
+              <>
+                {savedHref && (
+                  <p className="text-sm text-muted">
+                    Saved as investigation #{result.id}.{" "}
+                    <Link
+                      to={savedHref}
+                      className="font-medium text-accent no-underline hover:underline"
+                    >
+                      Open saved copy
+                    </Link>
+                  </p>
+                )}
+                <InvestigationResults
+                  data={{
+                    question: result.question,
+                    root_cause: result.root_cause,
+                    confidence: result.confidence,
+                    evidence: result.evidence,
+                    recommendation: result.recommendation,
+                    sources: result.sources,
+                    model: result.model,
+                    provider: result.provider,
+                  }}
+                />
+              </>
+            )}
+          </div>
+
+          <aside>
+            <InvestigationHistory
+              paymentId={resolvedPaymentId}
+              items={historyQuery.data ?? []}
+              isLoading={historyQuery.isPending}
+              activeInvestigationId={result?.id ?? undefined}
+            />
+          </aside>
+        </div>
       )}
     </div>
   );
