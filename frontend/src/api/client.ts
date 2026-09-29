@@ -1,5 +1,5 @@
 /** Empty in dev uses the Vite proxy; set VITE_API_URL for direct API access. */
-const API_BASE = (import.meta.env.VITE_API_URL ?? "").replace(/\/$/, "");
+export const API_BASE = (import.meta.env.VITE_API_URL ?? "").replace(/\/$/, "");
 
 export class ApiError extends Error {
   readonly status: number;

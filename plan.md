@@ -1011,9 +1011,9 @@ Example:
 
 ## Day 20
 
--   [ ] Add SSE streaming if useful
--   [ ] Stream investigation progress
--   [ ] Improve user experience
+-   [x] Add SSE streaming if useful
+-   [x] Stream investigation progress
+-   [x] Improve user experience
 
 If SSE starts consuming too much time, skip it.
 

@@ -18,14 +18,7 @@ const TOOL_LABELS: Record<string, string> = {
 
 const RCA_STEP_ID = "generate_rca";
 const RCA_LABEL = "Generating RCA";
-
-export const SIMULATED_STEP_IDS = [
-  "get_payment",
-  "get_payment_events",
-  "search_logs",
-  "search_payment_docs",
-  RCA_STEP_ID,
-] as const;
+const GATHERING_LABEL = "Gathering evidence with tools";
 
 function toolLabel(toolName: string): string {
   return TOOL_LABELS[toolName] ?? toolName.replaceAll("_", " ");
@@ -51,17 +44,39 @@ function isStepError(result: unknown): boolean {
   );
 }
 
-export function buildSimulatedProgress(activeIndex: number): InvestigationProgressStep[] {
-  return SIMULATED_STEP_IDS.map((id, index) => {
-    const label = id === RCA_STEP_ID ? RCA_LABEL : toolLabel(id);
-    let state: ProgressStepState = "pending";
-    if (index < activeIndex) {
-      state = "complete";
-    } else if (index === activeIndex) {
-      state = "active";
-    }
-    return { id: `${id}-${index}`, label, state };
+export function buildLiveStreamProgress(live: {
+  steps: ToolExecutionStep[];
+  rcaPhase: boolean;
+  started: boolean;
+}): InvestigationProgressStep[] {
+  const rows: InvestigationProgressStep[] = live.steps.map((step, index) => {
+    const errored = isStepError(step.result);
+    return {
+      id: `${step.tool}-${index}`,
+      label: toolLabel(step.tool),
+      detail: stepDetail(step),
+      state: errored ? "error" : "complete",
+    };
   });
+
+  if (live.rcaPhase) {
+    rows.push({
+      id: `${RCA_STEP_ID}-active`,
+      label: RCA_LABEL,
+      state: "active",
+    });
+    return rows;
+  }
+
+  if (live.started) {
+    rows.push({
+      id: "gathering-active",
+      label: GATHERING_LABEL,
+      state: "active",
+    });
+  }
+
+  return rows;
 }
 
 export function buildProgressFromToolSteps(

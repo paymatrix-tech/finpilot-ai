@@ -26,11 +26,18 @@ export function InvestigationPage() {
     data: result,
     isError,
     error,
+    liveSteps,
+    rcaPhase,
   } = useInvestigation();
 
   const { steps: progressSteps, isLive: progressIsLive } = useInvestigationProgress(
     isRunning,
     result?.steps,
+    {
+      steps: liveSteps,
+      rcaPhase,
+      started: isRunning || liveSteps.length > 0,
+    },
   );
 
   useEffect(() => {

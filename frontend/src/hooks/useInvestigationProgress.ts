@@ -1,45 +1,31 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
 import {
+  buildLiveStreamProgress,
   buildProgressFromToolSteps,
-  buildSimulatedProgress,
   type InvestigationProgressStep,
-  SIMULATED_STEP_IDS,
 } from "../lib/investigationProgress";
 import type { ToolExecutionStep } from "../types/investigation";
 
-const STEP_INTERVAL_MS = 1100;
+type LiveStreamState = {
+  steps: ToolExecutionStep[];
+  rcaPhase: boolean;
+  started: boolean;
+};
 
 export function useInvestigationProgress(
   isRunning: boolean,
   toolSteps: ToolExecutionStep[] | undefined,
+  liveStream?: LiveStreamState,
 ): { steps: InvestigationProgressStep[]; isLive: boolean } {
-  const [simulatedIndex, setSimulatedIndex] = useState(0);
-
-  useEffect(() => {
-    if (!isRunning) {
-      setSimulatedIndex(0);
-      return;
-    }
-
-    setSimulatedIndex(0);
-    const interval = window.setInterval(() => {
-      setSimulatedIndex((previous) =>
-        Math.min(previous + 1, SIMULATED_STEP_IDS.length - 1),
-      );
-    }, STEP_INTERVAL_MS);
-
-    return () => window.clearInterval(interval);
-  }, [isRunning]);
-
   const steps = useMemo(() => {
-    if (isRunning) {
-      return buildSimulatedProgress(simulatedIndex);
+    if (isRunning && liveStream) {
+      return buildLiveStreamProgress(liveStream);
     }
-    if (toolSteps && toolSteps.length >= 0) {
+    if (!isRunning && toolSteps) {
       return buildProgressFromToolSteps(toolSteps);
     }
     return [];
-  }, [isRunning, simulatedIndex, toolSteps]);
+  }, [isRunning, liveStream, toolSteps]);
 
   return { steps, isLive: isRunning };
 }
