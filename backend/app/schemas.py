@@ -91,7 +91,22 @@ class ToolExecutionStep(BaseModel):
     result: Any
 
 
+class InvestigationCreateRequest(BaseModel):
+    payment_id: str = Field(min_length=1)
+    question: str = Field(
+        default="Why did this payment fail?",
+        min_length=1,
+    )
+
+
 class InvestigationQueryResponse(BaseModel):
+    payment_id: str
+    question: str
+    root_cause: str
+    confidence: str
+    evidence: list[str]
+    recommendation: str
+    sources: list[str]
     answer: str
     steps: list[ToolExecutionStep]
     model: str

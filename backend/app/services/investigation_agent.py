@@ -4,24 +4,30 @@ from typing import Any
 from app.llm.base import LLMClient
 from app.llm.exceptions import LLMRequestError
 from app.llm.types import (
-    AssistantMessage,
     ChatCompletionRequest,
-    ChatCompletionResponse,
     ChatMessage,
     ToolCall,
 )
 from app.schemas import InvestigationQueryResponse, ToolExecutionStep
+from app.services.investigation_workflow import build_investigation_response
+from app.services.rca import generate_structured_rca
 from app.tools.definitions import PAYMENT_INVESTIGATION_TOOLS
 from app.tools.executor import PaymentToolExecutor, parse_tool_arguments
 from app.tools.exceptions import ToolError
 
-SYSTEM_PROMPT = """You are FinPilot, a payment investigation assistant.
+INVESTIGATION_SYSTEM_PROMPT = """You are FinPilot, a payment investigation assistant.
 
-Use the available tools to gather facts about the payment before answering.
-Only state facts supported by tool results. If evidence is insufficient, say so clearly.
-When the user asks about a specific payment, call tools as needed rather than guessing.
-Use search_payment_docs for retry policy, error code meaning, and gateway runbook guidance.
-Cite documentation sources when you rely on them."""
+Gather evidence using the available tools before the RCA step runs.
+You have four tools: get_payment, get_payment_events, search_logs, and search_payment_docs.
+
+Workflow:
+1. Confirm payment details with get_payment.
+2. Review lifecycle with get_payment_events when the failure path is unclear.
+3. Search logs for gateway responses, errors, and timeouts.
+4. Search internal documentation for error codes, retry policy, and gateway guidance.
+
+Only call tools you need, but ensure you have enough evidence for a root-cause analysis.
+Do not invent payment data. Do not produce the final RCA JSON yourself."""
 
 
 class InvestigationAgent:
@@ -38,19 +44,34 @@ class InvestigationAgent:
 
     def investigate(self, payment_id: str, question: str) -> InvestigationQueryResponse:
         messages: list[ChatMessage] = [
-            ChatMessage(role="system", content=SYSTEM_PROMPT),
+            ChatMessage(role="system", content=INVESTIGATION_SYSTEM_PROMPT),
             ChatMessage(
                 role="user",
                 content=(
                     f"Payment ID: {payment_id}\n"
                     f"Question: {question}\n"
-                    "Use tools when you need payment data, events, logs, or internal documentation."
+                    "Use tools to gather payment facts, events, logs, and documentation."
                 ),
             ),
         ]
+        steps = self._run_tool_gathering_phase(messages)
+        rca, model, provider = generate_structured_rca(
+            self._llm,
+            messages,
+            payment_id=payment_id,
+            question=question,
+        )
+        return build_investigation_response(
+            payment_id=payment_id,
+            question=question,
+            steps=steps,
+            rca=rca,
+            model=model,
+            provider=provider,
+        )
+
+    def _run_tool_gathering_phase(self, messages: list[ChatMessage]) -> list[ToolExecutionStep]:
         steps: list[ToolExecutionStep] = []
-        model = ""
-        provider = self._llm.provider
 
         for _ in range(self._max_tool_rounds):
             response = self._llm.chat_completion(
@@ -59,44 +80,35 @@ class InvestigationAgent:
                     tools=PAYMENT_INVESTIGATION_TOOLS,
                 )
             )
-            model = response.model
-            provider = response.provider
             assistant = response.message
 
-            if assistant.tool_calls:
+            if not assistant.tool_calls:
+                if assistant.content:
+                    messages.append(
+                        ChatMessage(role="assistant", content=assistant.content),
+                    )
+                break
+
+            messages.append(
+                ChatMessage(
+                    role="assistant",
+                    content=assistant.content,
+                    tool_calls=assistant.tool_calls,
+                )
+            )
+            for tool_call in assistant.tool_calls:
+                step = self._run_tool(tool_call)
+                steps.append(step)
                 messages.append(
                     ChatMessage(
-                        role="assistant",
-                        content=assistant.content,
-                        tool_calls=assistant.tool_calls,
+                        role="tool",
+                        content=json.dumps(step.result),
+                        tool_call_id=tool_call.id,
+                        name=tool_call.name,
                     )
                 )
-                for tool_call in assistant.tool_calls:
-                    step = self._run_tool(tool_call)
-                    steps.append(step)
-                    messages.append(
-                        ChatMessage(
-                            role="tool",
-                            content=json.dumps(step.result),
-                            tool_call_id=tool_call.id,
-                            name=tool_call.name,
-                        )
-                    )
-                continue
 
-            if assistant.content and assistant.content.strip():
-                return InvestigationQueryResponse(
-                    answer=assistant.content.strip(),
-                    steps=steps,
-                    model=model,
-                    provider=provider,
-                )
-
-            raise LLMRequestError("Model returned an empty response without tool calls.")
-
-        raise LLMRequestError(
-            f"Investigation exceeded the maximum of {self._max_tool_rounds} tool rounds."
-        )
+        return steps
 
     def _run_tool(self, tool_call: ToolCall) -> ToolExecutionStep:
         try:

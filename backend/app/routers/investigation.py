@@ -9,7 +9,11 @@ from app.llm.exceptions import LLMConfigurationError, LLMRequestError
 from app.llm.factory import get_llm_client
 from app.repositories.documentation import DocumentationRepository
 from app.repositories.payment import PaymentRepository
-from app.schemas import InvestigationQueryRequest, InvestigationQueryResponse
+from app.schemas import (
+    InvestigationCreateRequest,
+    InvestigationQueryRequest,
+    InvestigationQueryResponse,
+)
 from app.services.investigation_agent import InvestigationAgent
 from app.tools.documentation import DocumentationTools
 from app.tools.executor import PaymentToolExecutor
@@ -28,14 +32,30 @@ def get_investigation_agent(
     return InvestigationAgent(llm, executor)
 
 
+def _run_investigation(
+    agent: InvestigationAgent,
+    payment_id: str,
+    question: str,
+) -> InvestigationQueryResponse:
+    try:
+        return agent.investigate(payment_id, question)
+    except LLMConfigurationError as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+    except LLMRequestError as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
+
+
+@router.post("", response_model=InvestigationQueryResponse)
+def create_investigation(
+    body: InvestigationCreateRequest,
+    agent: Annotated[InvestigationAgent, Depends(get_investigation_agent)],
+) -> InvestigationQueryResponse:
+    return _run_investigation(agent, body.payment_id, body.question)
+
+
 @router.post("/query", response_model=InvestigationQueryResponse)
 def investigate_payment(
     body: InvestigationQueryRequest,
     agent: Annotated[InvestigationAgent, Depends(get_investigation_agent)],
 ) -> InvestigationQueryResponse:
-    try:
-        return agent.investigate(body.payment_id, body.question)
-    except LLMConfigurationError as exc:
-        raise HTTPException(status_code=503, detail=str(exc)) from exc
-    except LLMRequestError as exc:
-        raise HTTPException(status_code=502, detail=str(exc)) from exc
+    return _run_investigation(agent, body.payment_id, body.question)

@@ -940,9 +940,9 @@ Answer
 
 ## Day 14
 
--   [ ] Combine all tools
--   [ ] Implement investigation workflow
--   [ ] Generate structured RCA
+-   [x] Combine all tools
+-   [x] Implement investigation workflow
+-   [x] Generate structured RCA
 
 Milestone:
 

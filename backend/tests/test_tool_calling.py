@@ -15,6 +15,9 @@ from app.llm.types import (
 from app.models import Payment
 from app.repositories.payment import PaymentRepository
 from app.services.investigation_agent import InvestigationAgent
+from app.documentation.seed import seed_documents
+from app.repositories.documentation import DocumentationRepository
+from app.tools.documentation import DocumentationTools
 from app.tools.executor import PaymentToolExecutor, parse_tool_arguments
 from app.tools.payment import PaymentTools
 
@@ -67,26 +70,48 @@ def test_investigation_agent_runs_tools_then_answers(
                 provider="sequence-test",
             ),
             ChatCompletionResponse(
-                message=AssistantMessage(
-                    content="The payment failed because the gateway returned error code R01."
-                ),
+                message=AssistantMessage(content="Evidence gathering complete."),
                 model="test-model",
+                provider="sequence-test",
+            ),
+            ChatCompletionResponse(
+                message=AssistantMessage(
+                    content=json.dumps(
+                        {
+                            "root_cause": "Insufficient funds",
+                            "confidence": "high",
+                            "evidence": [
+                                "Gateway returned error code R01",
+                                "Payment status is FAILED",
+                            ],
+                            "recommendation": "Do not retry immediately",
+                            "sources": ["ach-error-codes.md"],
+                        }
+                    )
+                ),
+                model="rca-model",
                 provider="sequence-test",
             ),
         ]
     )
-    tools = PaymentTools(PaymentRepository(db))
-    agent = InvestigationAgent(llm, PaymentToolExecutor(tools))
+    seed_documents(db)
+    payment_tools = PaymentTools(PaymentRepository(db))
+    documentation_tools = DocumentationTools(DocumentationRepository(db))
+    agent = InvestigationAgent(llm, PaymentToolExecutor(payment_tools, documentation_tools))
 
     result = agent.investigate(payment_id, "Why did this payment fail?")
 
-    assert llm.calls == 2
+    assert llm.calls == 3
     assert len(result.steps) == 2
     assert result.steps[0].tool == "get_payment"
     assert result.steps[0].result["error_code"] == "R01"
     assert result.steps[1].tool == "search_logs"
     assert "R01" in result.steps[1].result[0]["message"]
-    assert "R01" in result.answer
+    assert result.root_cause == "Insufficient funds"
+    assert result.confidence == "high"
+    assert "R01" in result.evidence[0]
+    assert result.sources == ["ach-error-codes.md"]
+    assert result.model == "rca-model"
 
 
 def test_openai_compatible_client_parses_tool_calls() -> None:
@@ -153,6 +178,13 @@ def test_investigation_query_endpoint(
             assert pid == payment_id
             assert question
             return InvestigationQueryResponse(
+                payment_id=pid,
+                question=question,
+                root_cause="Insufficient funds",
+                confidence="high",
+                evidence=["Gateway returned R01"],
+                recommendation="Do not retry immediately",
+                sources=["ach-error-codes.md"],
                 answer="Failed with R01.",
                 steps=[
                     ToolExecutionStep(
