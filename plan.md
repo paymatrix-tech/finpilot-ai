@@ -1021,12 +1021,12 @@ If SSE starts consuming too much time, skip it.
 
 ## Day 21
 
--   [ ] UI cleanup
--   [ ] Typography
--   [ ] Spacing
--   [ ] Empty states
--   [ ] Loading states
--   [ ] Error states
+-   [x] UI cleanup
+-   [x] Typography
+-   [x] Spacing
+-   [x] Empty states
+-   [x] Loading states
+-   [x] Error states
 
 Milestone:
 

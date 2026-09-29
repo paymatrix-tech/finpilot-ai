@@ -1,5 +1,6 @@
 import type { PaymentEvent } from "../../types/paymentDetail";
 import { formatEventDetail, formatEventType } from "../../lib/format";
+import { ListEmptyHint } from "../ui/ListEmptyHint";
 
 type PaymentTimelineProps = {
   events: PaymentEvent[];
@@ -7,9 +8,7 @@ type PaymentTimelineProps = {
 
 export function PaymentTimeline({ events }: PaymentTimelineProps) {
   if (events.length === 0) {
-    return (
-      <p className="text-sm text-muted">No timeline events recorded for this payment.</p>
-    );
+    return <ListEmptyHint>No timeline events recorded for this payment.</ListEmptyHint>;
   }
 
   return (

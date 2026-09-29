@@ -6,6 +6,11 @@ import { InvestigationHistory } from "../components/investigation/InvestigationH
 import { InvestigationProgress } from "../components/investigation/InvestigationProgress";
 import { InvestigationResults } from "../components/investigation/InvestigationResults";
 import { PaymentStatusBadge } from "../components/payments/PaymentStatusBadge";
+import { BackLink } from "../components/ui/BackLink";
+import { EmptyState } from "../components/ui/EmptyState";
+import { PageHeader } from "../components/ui/PageHeader";
+import { PanelSkeleton } from "../components/ui/PanelSkeleton";
+import { pageStackClass, panelClass, panelPaddingClass } from "../components/ui/classes";
 import { useInvestigation } from "../hooks/useInvestigation";
 import { useInvestigationHistory } from "../hooks/useInvestigationHistory";
 import { useInvestigationProgress } from "../hooks/useInvestigationProgress";
@@ -49,7 +54,13 @@ export function InvestigationPage() {
   }, [paymentId, runInvestigation]);
 
   if (!paymentId) {
-    return <p className="text-sm text-danger">Missing payment ID in the URL.</p>;
+    return (
+      <EmptyState
+        title="Missing payment ID"
+        description="Start an investigation from a payment in the ledger."
+        action={<BackLink to="/">← Back to payments</BackLink>}
+      />
+    );
   }
 
   const resolvedPaymentId = paymentId;
@@ -69,78 +80,59 @@ export function InvestigationPage() {
       ? `/payments/${encodeURIComponent(resolvedPaymentId)}/investigations/${result.id}`
       : null;
 
+  const paymentMeta =
+    payment && !isPaymentPending
+      ? `${formatAmount(payment.amount, payment.currency)} via ${payment.gateway}${
+          payment.error_code ? ` · error ${payment.error_code}` : ""
+        }`
+      : undefined;
+
   return (
-    <div className="space-y-8">
+    <div className={pageStackClass}>
       <div className="flex flex-wrap items-center justify-between gap-4">
-        <Link
-          to={detailHref}
-          className="text-sm font-medium text-accent no-underline hover:underline"
-        >
-          ← Back to payment details
-        </Link>
+        <BackLink to={detailHref}>← Back to payment details</BackLink>
         {payment && <PaymentStatusBadge status={payment.status} />}
       </div>
 
-      <header className="space-y-3">
-        <p className="text-xs font-semibold tracking-[0.16em] text-muted uppercase">
-          AI investigation
-        </p>
-        <h1 className="font-display text-3xl tracking-tight sm:text-4xl">
-          Why did this payment fail?
-        </h1>
-        <p className="font-mono text-sm text-muted">{paymentId}</p>
-        {payment && !isPaymentPending && (
-          <p className="text-sm text-muted">
-            {formatAmount(payment.amount, payment.currency)} via {payment.gateway}
-            {payment.error_code ? (
-              <>
-                {" "}
-                · error{" "}
-                <span className="font-mono text-copper">{payment.error_code}</span>
-              </>
-            ) : null}
-          </p>
-        )}
-      </header>
+      <PageHeader
+        eyebrow="AI investigation"
+        title="Why did this payment fail?"
+        description="FinPilot gathers payment data, events, logs, and documentation, then explains the likely root cause."
+        meta={
+          <>
+            <p className="font-mono text-[13px]">{paymentId}</p>
+            {paymentMeta && <p className="mt-1">{paymentMeta}</p>}
+          </>
+        }
+      />
 
       {isPaymentPending && (
-        <div className="animate-pulse rounded-3xl border border-line bg-panel p-6">
-          <div className="h-4 w-40 rounded bg-line/60" />
-          <div className="mt-6 space-y-4">
-            <div className="h-4 w-3/4 rounded bg-line/40" />
-            <div className="h-4 w-2/3 rounded bg-line/30" />
-          </div>
+        <div className={`${panelClass} ${panelPaddingClass}`} aria-busy="true">
+          <PanelSkeleton lines={4} />
         </div>
       )}
 
       {!isPaymentPending && notFound && (
-        <div className="rounded-3xl border border-line bg-panel px-6 py-10 text-center">
-          <p className="font-mono text-lg">{paymentId}</p>
-          <p className="mt-2 text-sm text-muted">No payment exists with that ID.</p>
-          <Link
-            to="/"
-            className="mt-4 inline-block text-sm font-medium text-accent no-underline hover:underline"
-          >
-            Search the ledger
-          </Link>
-        </div>
+        <EmptyState
+          monoHint={paymentId}
+          title="Payment not found"
+          description="This payment is not in the ledger, so FinPilot cannot investigate it."
+          action={<BackLink to="/">Search the ledger</BackLink>}
+        />
       )}
 
       {!notFound && (
-        <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(280px,340px)]">
+        <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(280px,340px)]">
           <div className="space-y-6">
             <form
               onSubmit={handleRerun}
-              className="rounded-3xl border border-line bg-panel p-5 shadow-[0_24px_60px_rgba(28,25,21,0.04)] sm:p-6"
+              className={`${panelClass} ${panelPaddingClass}`}
             >
-              <label
-                className="block text-sm font-semibold text-ink"
-                htmlFor="investigation-question"
-              >
+              <label className="block text-sm font-semibold text-ink" htmlFor="investigation-question">
                 Investigation question
               </label>
               <p className="mt-1 text-sm text-muted">
-                FinPilot reads payment data, events, logs, and internal docs to answer this.
+                Adjust the question before re-running. The first investigation starts automatically.
               </p>
               <textarea
                 id="investigation-question"
@@ -150,7 +142,7 @@ export function InvestigationPage() {
                 disabled={isRunning}
                 className="mt-4 w-full resize-y rounded-2xl border border-line bg-page px-4 py-3 text-sm text-ink outline-none transition focus:border-accent focus:ring-2 focus:ring-accent/20 disabled:opacity-60"
               />
-              <div className="mt-4 flex flex-wrap items-center gap-3">
+              <div className="mt-4">
                 <button
                   type="submit"
                   disabled={isRunning || !question.trim()}
@@ -170,21 +162,16 @@ export function InvestigationPage() {
                 error={error}
                 footer={
                   isApiErrorCode(error, "payment_not_found") ? (
-                    <Link
-                      to="/"
-                      className="text-sm font-medium text-accent no-underline hover:underline"
-                    >
-                      Search the ledger
-                    </Link>
+                    <BackLink to="/">Search the ledger</BackLink>
                   ) : undefined
                 }
               />
             )}
 
             {result && !isRunning && (
-              <>
+              <div className="space-y-6">
                 {savedHref && (
-                  <p className="text-sm text-muted">
+                  <p className="rounded-2xl border border-line bg-page px-4 py-3 text-sm text-muted">
                     Saved as investigation #{result.id}.{" "}
                     <Link
                       to={savedHref}
@@ -207,7 +194,7 @@ export function InvestigationPage() {
                     insufficient_evidence: result.insufficient_evidence,
                   }}
                 />
-              </>
+              </div>
             )}
           </div>
 
@@ -216,6 +203,8 @@ export function InvestigationPage() {
               paymentId={resolvedPaymentId}
               items={historyQuery.data ?? []}
               isLoading={historyQuery.isPending}
+              isError={historyQuery.isError}
+              error={historyQuery.error}
               activeInvestigationId={result?.id ?? undefined}
             />
           </aside>

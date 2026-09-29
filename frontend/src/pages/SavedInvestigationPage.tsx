@@ -1,9 +1,14 @@
-import { Link, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { ApiError } from "../api/client";
 import { InvestigationErrorAlert } from "../components/investigation/InvestigationErrorAlert";
 import { InvestigationHistory } from "../components/investigation/InvestigationHistory";
 import { InvestigationResults } from "../components/investigation/InvestigationResults";
 import { PaymentStatusBadge } from "../components/payments/PaymentStatusBadge";
+import { BackLink } from "../components/ui/BackLink";
+import { EmptyState } from "../components/ui/EmptyState";
+import { PageHeader } from "../components/ui/PageHeader";
+import { PanelSkeleton } from "../components/ui/PanelSkeleton";
+import { pageStackClass, panelClass, panelPaddingClass } from "../components/ui/classes";
 import { useInvestigationHistory } from "../hooks/useInvestigationHistory";
 import { usePaymentDetail } from "../hooks/usePaymentDetail";
 import { useSavedInvestigation } from "../hooks/useSavedInvestigation";
@@ -27,7 +32,13 @@ export function SavedInvestigationPage() {
   const savedQuery = useSavedInvestigation(validId);
 
   if (!paymentId || validId === undefined) {
-    return <p className="text-sm text-danger">Invalid investigation link.</p>;
+    return (
+      <EmptyState
+        title="Invalid investigation link"
+        description="Use a saved investigation from the history list or run a new investigation."
+        action={<BackLink to="/">← Back to payments</BackLink>}
+      />
+    );
   }
 
   const investigateHref = `/payments/${encodeURIComponent(paymentId)}/investigate`;
@@ -36,52 +47,44 @@ export function SavedInvestigationPage() {
     savedQuery.error instanceof ApiError && savedQuery.error.status === 404;
 
   return (
-    <div className="space-y-8">
+    <div className={pageStackClass}>
       <div className="flex flex-wrap items-center justify-between gap-4">
-        <Link
-          to={investigateHref}
-          className="text-sm font-medium text-accent no-underline hover:underline"
-        >
-          ← New investigation
-        </Link>
+        <BackLink to={investigateHref}>← New investigation</BackLink>
         {payment && <PaymentStatusBadge status={payment.status} />}
       </div>
 
-      <header className="space-y-3">
-        <p className="text-xs font-semibold tracking-[0.16em] text-muted uppercase">
-          Saved investigation
-        </p>
-        <h1 className="font-display text-3xl tracking-tight sm:text-4xl">Investigation #{validId}</h1>
-        <p className="font-mono text-sm text-muted">{paymentId}</p>
-        {savedQuery.data && (
-          <p className="text-sm text-muted">Run at {formatDateTime(savedQuery.data.created_at)}</p>
-        )}
-        {payment && !isPaymentPending && (
-          <p className="text-sm text-muted">
-            {formatAmount(payment.amount, payment.currency)} via {payment.gateway}
-          </p>
-        )}
-      </header>
+      <PageHeader
+        eyebrow="Saved investigation"
+        title={`Investigation #${validId}`}
+        meta={
+          <>
+            <p className="font-mono text-[13px]">{paymentId}</p>
+            {savedQuery.data && (
+              <p className="mt-1">Run at {formatDateTime(savedQuery.data.created_at)}</p>
+            )}
+            {payment && !isPaymentPending && (
+              <p className="mt-1">
+                {formatAmount(payment.amount, payment.currency)} via {payment.gateway}
+              </p>
+            )}
+          </>
+        }
+      />
 
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(280px,340px)]">
+      <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(280px,340px)]">
         <div>
           {savedQuery.isPending && (
-            <div className="animate-pulse rounded-3xl border border-line bg-panel p-6">
-              <div className="h-4 w-40 rounded bg-line/60" />
-              <div className="mt-6 h-24 rounded-2xl bg-line/40" />
+            <div className={`${panelClass} ${panelPaddingClass}`} aria-busy="true">
+              <PanelSkeleton lines={5} />
             </div>
           )}
 
           {notFound && (
-            <div className="rounded-3xl border border-line bg-panel px-6 py-10 text-center">
-              <p className="text-sm text-muted">This investigation was not found.</p>
-              <Link
-                to={investigateHref}
-                className="mt-4 inline-block text-sm font-medium text-accent no-underline hover:underline"
-              >
-                Start a new investigation
-              </Link>
-            </div>
+            <EmptyState
+              title="Investigation not found"
+              description="It may have been removed or the link is outdated."
+              action={<BackLink to={investigateHref}>Start a new investigation</BackLink>}
+            />
           )}
 
           {savedQuery.isError && !notFound && (
@@ -89,7 +92,9 @@ export function SavedInvestigationPage() {
               error={savedQuery.error}
               footer={
                 isApiErrorCode(savedQuery.error, "database_error") ? (
-                  <p className="text-xs text-muted">The API health indicator in the header shows database status.</p>
+                  <p className="text-xs text-muted">
+                    The API health indicator in the header shows database status.
+                  </p>
                 ) : undefined
               }
             />
@@ -118,14 +123,13 @@ export function SavedInvestigationPage() {
             paymentId={paymentId}
             items={historyQuery.data ?? []}
             isLoading={historyQuery.isPending}
+            isError={historyQuery.isError}
+            error={historyQuery.error}
             activeInvestigationId={validId}
           />
-          <Link
-            to={detailHref}
-            className="block text-center text-sm font-medium text-accent no-underline hover:underline"
-          >
-            View payment details
-          </Link>
+          <p className="text-center">
+            <BackLink to={detailHref}>View payment details</BackLink>
+          </p>
         </aside>
       </div>
 

@@ -1,5 +1,6 @@
 import type { PaymentLog } from "../../types/paymentDetail";
 import { formatTime } from "../../lib/format";
+import { ListEmptyHint } from "../ui/ListEmptyHint";
 
 type PaymentLogsListProps = {
   logs: PaymentLog[];
@@ -13,7 +14,7 @@ const levelStyles: Record<string, string> = {
 
 export function PaymentLogsList({ logs }: PaymentLogsListProps) {
   if (logs.length === 0) {
-    return <p className="text-sm text-muted">No logs recorded.</p>;
+    return <ListEmptyHint>No application logs recorded for this payment.</ListEmptyHint>;
   }
 
   return (

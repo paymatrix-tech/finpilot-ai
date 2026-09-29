@@ -19,7 +19,20 @@
 }
 
 body {
-  @apply m-0 bg-page font-sans text-ink antialiased;
+  @apply m-0 bg-page font-sans text-base leading-relaxed text-ink antialiased;
+}
+
+@layer base {
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+  }
+
+  :focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--color-accent) 70%, transparent);
+    outline-offset: 2px;
+  }
 }
 
 input[type="search"]::-webkit-search-decoration,

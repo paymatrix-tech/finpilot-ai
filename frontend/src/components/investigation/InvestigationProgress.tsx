@@ -1,4 +1,5 @@
 import type { InvestigationProgressStep } from "../../lib/investigationProgress";
+import { panelClass, panelPaddingClass } from "../ui/classes";
 
 type InvestigationProgressProps = {
   steps: InvestigationProgressStep[];
@@ -53,7 +54,7 @@ export function InvestigationProgress({ steps, isLive = false }: InvestigationPr
 
   return (
     <section
-      className="rounded-3xl border border-line bg-panel p-5 shadow-[0_24px_60px_rgba(28,25,21,0.04)] sm:p-6"
+      className={`${panelClass} ${panelPaddingClass}`}
       aria-labelledby="investigation-progress-heading"
       aria-busy={isLive}
     >
