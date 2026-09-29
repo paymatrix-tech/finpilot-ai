@@ -923,10 +923,10 @@ Answer
 
 ## Day 12
 
--   [ ] Configure pgvector
--   [ ] Implement document chunking
--   [ ] Generate embeddings
--   [ ] Store embeddings
+-   [x] Configure pgvector
+-   [x] Implement document chunking
+-   [x] Generate embeddings
+-   [x] Store embeddings
 
 ------------------------------------------------------------------------
 

@@ -11,6 +11,11 @@ class Settings(BaseSettings):
     llm_base_url: str | None = None
     llm_timeout_seconds: float = 60.0
 
+    # Embeddings (Day 12+). Default stub works without an API key.
+    embedding_provider: str = "stub"
+    embedding_model: str | None = None
+    embedding_dimensions: int = 1536
+
     model_config = SettingsConfigDict(
         env_file=(".env", "../.env"),
         extra="ignore",

@@ -1,6 +1,7 @@
 from pathlib import Path
 
 import pytest
+from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 from app.documentation.loader import (
@@ -8,6 +9,7 @@ from app.documentation.loader import (
     DOCUMENT_CATEGORIES,
     load_markdown_documents,
 )
+from app.documentation.indexing import chunk_count
 from app.documentation.seed import document_count, seed_documents
 
 
@@ -36,6 +38,11 @@ def test_seed_documents_persists_to_database(db: Session) -> None:
     count = seed_documents(db)
     assert count == len(DOCUMENT_CATEGORIES)
     assert document_count(db) == count
+    assert chunk_count(db) > 0
+    missing_embeddings = db.execute(
+        text("SELECT COUNT(*) FROM document_chunks WHERE embedding IS NULL")
+    ).scalar_one()
+    assert missing_embeddings == 0
 
 
 def test_documentation_files_are_non_empty() -> None:
