@@ -955,12 +955,12 @@ Milestone:
 
 ## Day 15
 
--   [ ] Build investigation page
--   [ ] Display question
--   [ ] Display root cause
--   [ ] Display evidence
--   [ ] Display recommendation
--   [ ] Display confidence
+-   [x] Build investigation page
+-   [x] Display question
+-   [x] Display root cause
+-   [x] Display evidence
+-   [x] Display recommendation
+-   [x] Display confidence
 
 ------------------------------------------------------------------------
 
