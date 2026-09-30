@@ -5,6 +5,7 @@ export type ApiErrorCode =
   | "database_error"
   | "llm_unavailable"
   | "llm_request_failed"
+  | "llm_rate_limited"
   | "investigation_not_found"
   | "unknown";
 
@@ -35,6 +36,12 @@ const PRESENTATIONS: Record<ApiErrorCode, ApiErrorPresentation> = {
     message: "The model could not complete this investigation.",
     suggestion: "Wait a moment and run the investigation again.",
   },
+  llm_rate_limited: {
+    title: "AI rate limit reached",
+    message: "The provider temporarily blocked new requests.",
+    suggestion:
+      "Gemini free tier allows only a few requests per minute, and each investigation uses multiple calls. Wait about a minute, use LLM_PROVIDER=stub locally, or upgrade billing.",
+  },
   investigation_not_found: {
     title: "Investigation not found",
     message: "This saved investigation no longer exists.",
@@ -58,9 +65,14 @@ export function presentApiError(error: unknown): ApiErrorPresentation {
   if (error instanceof ApiError) {
     const code = normalizeApiErrorCode(error.code);
     const base = PRESENTATIONS[code];
+    const retryHint =
+      error.retryAfterSeconds !== undefined
+        ? `Suggested wait: about ${error.retryAfterSeconds} seconds.`
+        : undefined;
     return {
       ...base,
       message: error.message || base.message,
+      suggestion: [retryHint, base.suggestion].filter(Boolean).join(" "),
     };
   }
   if (error instanceof Error) {

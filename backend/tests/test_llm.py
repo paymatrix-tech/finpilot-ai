@@ -57,6 +57,33 @@ def test_openai_compatible_client_parses_response() -> None:
     assert result.model == "test-model"
 
 
+def test_create_auto_client_builds_router(monkeypatch: pytest.MonkeyPatch) -> None:
+    from app.config import settings
+    from app.llm.routing import RoutingLLMClient
+
+    monkeypatch.setattr(settings, "llm_provider", "auto")
+    monkeypatch.setattr(settings, "groq_api_key", "groq-key")
+    monkeypatch.setattr(settings, "gemini_api_key", None)
+    monkeypatch.setattr(settings, "llm_api_key", None)
+    monkeypatch.setattr(settings, "llm_route_order", "groq,stub")
+    reset_llm_client_cache()
+    client = create_llm_client()
+    assert isinstance(client, RoutingLLMClient)
+    assert client.route_order == ["groq", "stub"]
+
+
+def test_create_groq_client_uses_defaults(monkeypatch: pytest.MonkeyPatch) -> None:
+    from app.config import settings
+
+    monkeypatch.setattr(settings, "llm_provider", "groq")
+    monkeypatch.setattr(settings, "llm_api_key", "test-key")
+    monkeypatch.setattr(settings, "llm_model", None)
+    monkeypatch.setattr(settings, "llm_base_url", None)
+    reset_llm_client_cache()
+    client = create_llm_client()
+    assert client.provider == "groq"
+
+
 def test_create_gemini_client_uses_defaults(monkeypatch: pytest.MonkeyPatch) -> None:
     from app.config import settings
 
@@ -74,6 +101,7 @@ def test_create_openai_client_requires_api_key(monkeypatch: pytest.MonkeyPatch) 
 
     monkeypatch.setattr(settings, "llm_provider", "openai")
     monkeypatch.setattr(settings, "llm_api_key", None)
+    monkeypatch.setattr(settings, "openai_api_key", None)
     reset_llm_client_cache()
     with pytest.raises(LLMConfigurationError):
         create_llm_client()

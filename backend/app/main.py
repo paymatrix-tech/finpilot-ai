@@ -1,3 +1,6 @@
+import logging
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -5,11 +8,36 @@ from sqlalchemy.exc import SQLAlchemyError
 
 from app.api_errors import database_unavailable_exception
 from app.db import check_database
+from app.llm.factory import get_llm_client, reset_llm_client_cache
+from app.llm.openai_compat import OpenAICompatibleClient
+from app.llm.routing import RoutingLLMClient
 from app.routers.investigation import router as investigation_router
 from app.routers.llm import router as llm_router
 from app.routers.payments import router as payments_router
 
-app = FastAPI(title="FinPilot API")
+logger = logging.getLogger(__name__)
+
+
+def _log_llm_routes() -> None:
+    reset_llm_client_cache()
+    client = get_llm_client()
+    if isinstance(client, RoutingLLMClient):
+        for name, route_client in client._clients:
+            model = getattr(route_client, "model", type(route_client).__name__)
+            logger.info("LLM route %s -> model %s", name, model)
+    elif isinstance(client, OpenAICompatibleClient):
+        logger.info("LLM provider %s -> model %s", client.provider, client.model)
+    else:
+        logger.info("LLM client %s", type(client).__name__)
+
+
+@asynccontextmanager
+async def lifespan(_app: FastAPI):
+    _log_llm_routes()
+    yield
+
+
+app = FastAPI(title="FinPilot API", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,

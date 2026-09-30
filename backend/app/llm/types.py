@@ -9,6 +9,8 @@ class ToolCall(BaseModel):
     id: str
     name: str
     arguments: str
+    # Gemini 3+ returns this on tool calls; must be echoed on subsequent requests.
+    extra_content: dict[str, Any] | None = None
 
 
 class ChatMessage(BaseModel):

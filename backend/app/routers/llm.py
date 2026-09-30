@@ -1,8 +1,9 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 
 from app.llm.base import LLMClient
+from app.api_errors import raise_for_llm_error
 from app.llm.exceptions import LLMConfigurationError, LLMRequestError
 from app.llm.factory import get_llm_client
 from app.llm.types import ChatCompletionRequest, ChatCompletionResult
@@ -17,7 +18,5 @@ def chat_completion(
 ) -> ChatCompletionResult:
     try:
         return llm.complete(body)
-    except LLMConfigurationError as exc:
-        raise HTTPException(status_code=503, detail=str(exc)) from exc
-    except LLMRequestError as exc:
-        raise HTTPException(status_code=502, detail=str(exc)) from exc
+    except (LLMConfigurationError, LLMRequestError) as exc:
+        raise_for_llm_error(exc)

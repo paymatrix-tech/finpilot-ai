@@ -10,6 +10,7 @@ from app.llm.types import (
     AssistantMessage,
     ChatCompletionRequest,
     ChatCompletionResponse,
+    ChatMessage,
     ToolCall,
 )
 from app.models import Payment
@@ -162,6 +163,52 @@ def test_openai_compatible_client_parses_tool_calls() -> None:
     )
     assert len(response.message.tool_calls) == 1
     assert response.message.tool_calls[0].name == "get_payment"
+
+
+def test_openai_compatible_client_preserves_gemini_extra_content() -> None:
+    from app.llm.openai_compat import OpenAICompatibleClient
+
+    extra = {"google": {"thought_signature": "sig-abc"}}
+
+    def handler(_request: httpx.Request) -> httpx.Response:
+        return httpx.Response(
+            200,
+            json={
+                "model": "gemini-test",
+                "choices": [
+                    {
+                        "message": {
+                            "role": "assistant",
+                            "content": None,
+                            "tool_calls": [
+                                {
+                                    "id": "call_1",
+                                    "type": "function",
+                                    "extra_content": extra,
+                                    "function": {
+                                        "name": "get_payment",
+                                        "arguments": "{}",
+                                    },
+                                }
+                            ],
+                        }
+                    }
+                ],
+            },
+        )
+
+    http_client = httpx.Client(transport=httpx.MockTransport(handler))
+    client = OpenAICompatibleClient(
+        provider="gemini",
+        api_key="secret",
+        model="gemini-test",
+        base_url="https://example.test/v1",
+        http_client=http_client,
+    )
+    response = client.chat_completion(
+        ChatCompletionRequest(messages=[ChatMessage(role="user", content="hi")])
+    )
+    assert response.message.tool_calls[0].extra_content == extra
 
 
 def test_investigation_query_endpoint(

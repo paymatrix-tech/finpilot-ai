@@ -9,11 +9,14 @@ class ErrorDetail:
     DATABASE_ERROR = "database_error"
     LLM_UNAVAILABLE = "llm_unavailable"
     LLM_REQUEST_FAILED = "llm_request_failed"
+    LLM_RATE_LIMITED = "llm_rate_limited"
     INVESTIGATION_NOT_FOUND = "investigation_not_found"
 
 
-def error_detail(code: str, message: str) -> dict[str, str]:
-    return {"code": code, "message": message}
+def error_detail(code: str, message: str, **fields: Any) -> dict[str, Any]:
+    payload: dict[str, Any] = {"code": code, "message": message}
+    payload.update(fields)
+    return payload
 
 
 def http_error(
@@ -63,6 +66,38 @@ def llm_request_failed(message: str) -> HTTPException:
         code=ErrorDetail.LLM_REQUEST_FAILED,
         message=message,
     )
+
+
+def llm_rate_limited(
+    message: str,
+    *,
+    retry_after_seconds: float | None = None,
+) -> HTTPException:
+    fields: dict[str, Any] = {}
+    if retry_after_seconds is not None:
+        fields["retry_after_seconds"] = max(1, int(round(retry_after_seconds)))
+    return HTTPException(
+        status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+        detail=error_detail(ErrorDetail.LLM_RATE_LIMITED, message, **fields),
+    )
+
+
+def raise_for_llm_error(exc: Exception) -> None:
+    from app.llm.exceptions import (
+        LLMConfigurationError,
+        LLMRateLimitError,
+        LLMRequestError,
+    )
+
+    if isinstance(exc, LLMConfigurationError):
+        raise llm_unavailable(str(exc)) from exc
+    if isinstance(exc, LLMRateLimitError):
+        raise llm_rate_limited(
+            exc.user_message(),
+            retry_after_seconds=exc.retry_after_seconds,
+        ) from exc
+    if isinstance(exc, LLMRequestError):
+        raise llm_request_failed(str(exc)) from exc
 
 
 def database_unavailable_exception(exc: SQLAlchemyError) -> HTTPException:

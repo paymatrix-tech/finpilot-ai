@@ -3,7 +3,8 @@ from typing import Any
 import httpx
 
 from app.llm.base import LLMClient
-from app.llm.exceptions import LLMConfigurationError, LLMRequestError
+from app.llm.exceptions import LLMConfigurationError, LLMRateLimitError, LLMRequestError
+from app.llm.rate_limit import parse_retry_after_seconds
 from app.llm.serialization import chat_message_to_payload
 from app.llm.types import (
     AssistantMessage,
@@ -39,6 +40,10 @@ class OpenAICompatibleClient(LLMClient):
     def provider(self) -> str:
         return self._provider
 
+    @property
+    def model(self) -> str:
+        return self._model
+
     def chat_completion(self, request: ChatCompletionRequest) -> ChatCompletionResponse:
         if not request.messages:
             raise LLMRequestError("At least one message is required.")
@@ -64,6 +69,11 @@ class OpenAICompatibleClient(LLMClient):
 
         if response.status_code >= 400:
             detail = response.text.strip() or response.reason_phrase
+            if response.status_code == 429:
+                raise LLMRateLimitError(
+                    f"LLM returned 429: {detail}",
+                    retry_after_seconds=parse_retry_after_seconds(detail),
+                )
             raise LLMRequestError(f"LLM returned {response.status_code}: {detail}")
 
         try:
@@ -96,11 +106,15 @@ def _parse_tool_calls(raw_tool_calls: Any) -> list[ToolCall]:
     tool_calls: list[ToolCall] = []
     for item in raw_tool_calls:
         function = item.get("function", {})
+        extra_content = item.get("extra_content")
+        if extra_content is not None and not isinstance(extra_content, dict):
+            extra_content = None
         tool_calls.append(
             ToolCall(
                 id=str(item["id"]),
                 name=str(function["name"]),
                 arguments=str(function.get("arguments", "{}")),
+                extra_content=extra_content,
             )
         )
     return tool_calls

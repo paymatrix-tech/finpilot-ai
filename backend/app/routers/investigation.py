@@ -9,13 +9,13 @@ from sqlalchemy.orm import Session
 from app.api_errors import (
     database_error,
     error_detail,
-    llm_request_failed,
-    llm_unavailable,
     parse_error_payload,
+    raise_for_llm_error,
 )
 from app.db import check_database, get_session
 from app.llm.base import LLMClient
 from app.llm.exceptions import LLMConfigurationError, LLMRequestError
+from app.llm.sse_errors import llm_error_sse_payload
 from app.llm.factory import get_llm_client
 from app.repositories.documentation import DocumentationRepository
 from app.repositories.investigation import InvestigationRepository
@@ -69,10 +69,8 @@ def _run_investigation(
 
     try:
         response = agent.investigate(payment_id, question)
-    except LLMConfigurationError as exc:
-        raise llm_unavailable(str(exc)) from exc
-    except LLMRequestError as exc:
-        raise llm_request_failed(str(exc)) from exc
+    except (LLMConfigurationError, LLMRequestError) as exc:
+        raise_for_llm_error(exc)
 
     try:
         record = store.save(response)
@@ -115,16 +113,8 @@ def _investigation_event_stream(
                 session.refresh(record)
                 payload = response.model_copy(update={"id": record.id}).model_dump(mode="json")
             yield format_sse(event, payload)
-    except LLMConfigurationError as exc:
-        yield format_sse(
-            "error",
-            error_detail("llm_unavailable", str(exc)),
-        )
-    except LLMRequestError as exc:
-        yield format_sse(
-            "error",
-            error_detail("llm_request_failed", str(exc)),
-        )
+    except (LLMConfigurationError, LLMRequestError) as exc:
+        yield format_sse("error", llm_error_sse_payload(exc))
     except SQLAlchemyError:
         session.rollback()
         yield format_sse(

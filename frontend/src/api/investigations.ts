@@ -1,4 +1,4 @@
-import { API_BASE, ApiError, getJson, postJson } from "./client";
+import { API_BASE, ApiError, apiErrorFromDetail, getJson, postJson } from "./client";
 import { readSseStream } from "./sse";
 import type {
   CreateInvestigationRequest,
@@ -18,13 +18,9 @@ export type InvestigationStreamHandlers = {
 
 function parseApiErrorPayload(data: unknown): ApiError {
   if (typeof data === "object" && data !== null) {
-    const payload = data as { code?: string; message?: string };
-    if (typeof payload.message === "string") {
-      return new ApiError(
-        payload.message,
-        500,
-        typeof payload.code === "string" ? payload.code : undefined,
-      );
+    const error = apiErrorFromDetail(data, 429);
+    if (error.message !== "Request failed.") {
+      return error;
     }
   }
   return new ApiError("Investigation stream failed.", 500);
