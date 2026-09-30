@@ -955,20 +955,20 @@ Milestone:
 
 ## Day 15
 
--   [ ] Build investigation page
--   [ ] Display question
--   [ ] Display root cause
--   [ ] Display evidence
--   [ ] Display recommendation
--   [ ] Display confidence
+-   [x] Build investigation page
+-   [x] Display question
+-   [x] Display root cause
+-   [x] Display evidence
+-   [x] Display recommendation
+-   [x] Display confidence
 
 ------------------------------------------------------------------------
 
 ## Day 16
 
--   [ ] Add investigation progress
--   [ ] Show tool execution steps
--   [ ] Add loading state
+-   [x] Add investigation progress
+-   [x] Show tool execution steps
+-   [x] Add loading state
 
 Example:
 
@@ -984,36 +984,36 @@ Example:
 
 ## Day 17
 
--   [ ] Save investigations
--   [ ] Add investigation history
--   [ ] Display previous investigations
+-   [x] Save investigations
+-   [x] Add investigation history
+-   [x] Display previous investigations
 
 ------------------------------------------------------------------------
 
 ## Day 18
 
--   [ ] Improve error handling
--   [ ] Handle payment not found
--   [ ] Handle model failure
--   [ ] Handle database failure
--   [ ] Handle insufficient evidence
+-   [x] Improve error handling
+-   [x] Handle payment not found
+-   [x] Handle model failure
+-   [x] Handle database failure
+-   [x] Handle insufficient evidence
 
 ------------------------------------------------------------------------
 
 ## Day 19
 
--   [ ] Improve AI prompts
--   [ ] Improve tool descriptions
--   [ ] Improve structured response
--   [ ] Add evidence requirements
+-   [x] Improve AI prompts
+-   [x] Improve tool descriptions
+-   [x] Improve structured response
+-   [x] Add evidence requirements
 
 ------------------------------------------------------------------------
 
 ## Day 20
 
--   [ ] Add SSE streaming if useful
--   [ ] Stream investigation progress
--   [ ] Improve user experience
+-   [x] Add SSE streaming if useful
+-   [x] Stream investigation progress
+-   [x] Improve user experience
 
 If SSE starts consuming too much time, skip it.
 
@@ -1021,12 +1021,12 @@ If SSE starts consuming too much time, skip it.
 
 ## Day 21
 
--   [ ] UI cleanup
--   [ ] Typography
--   [ ] Spacing
--   [ ] Empty states
--   [ ] Loading states
--   [ ] Error states
+-   [x] UI cleanup
+-   [x] Typography
+-   [x] Spacing
+-   [x] Empty states
+-   [x] Loading states
+-   [x] Error states
 
 Milestone:
 

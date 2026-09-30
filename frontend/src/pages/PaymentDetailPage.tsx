@@ -1,44 +1,18 @@
-import { Link, useParams } from "react-router-dom";
-import type { PropsWithChildren, ReactNode } from "react";
+import { useParams } from "react-router-dom";
 import { InvestigateButton } from "../components/payments/InvestigateButton";
 import { PaymentEventsList } from "../components/payments/PaymentEventsList";
 import { PaymentLogsList } from "../components/payments/PaymentLogsList";
 import { PaymentStatusBadge } from "../components/payments/PaymentStatusBadge";
 import { PaymentTimeline } from "../components/payments/PaymentTimeline";
-import { ApiError } from "../api/client";
+import { BackLink } from "../components/ui/BackLink";
+import { EmptyState } from "../components/ui/EmptyState";
+import { PageHeader } from "../components/ui/PageHeader";
+import { Panel } from "../components/ui/Panel";
+import { PanelSkeleton } from "../components/ui/PanelSkeleton";
+import { QueryErrorAlert } from "../components/ui/QueryErrorAlert";
+import { pageStackClass } from "../components/ui/classes";
 import { usePaymentDetail } from "../hooks/usePaymentDetail";
 import { formatAmount } from "../lib/format";
-
-function DetailPanel({
-  title,
-  children,
-  footer,
-}: PropsWithChildren<{ title: string; footer?: ReactNode }>) {
-  return (
-    <section className="rounded-3xl border border-line bg-panel p-5 shadow-[0_24px_60px_rgba(28,25,21,0.04)] sm:p-6">
-      <h2 className="text-sm font-semibold tracking-wide text-ink">{title}</h2>
-      <div className="mt-4">{children}</div>
-      {footer}
-    </section>
-  );
-}
-
-function errorMessage(error: unknown): string {
-  if (error instanceof ApiError || error instanceof Error) {
-    return error.message;
-  }
-  return "Request failed";
-}
-
-function PanelSkeleton() {
-  return (
-    <div className="animate-pulse space-y-3">
-      <div className="h-4 w-3/4 rounded bg-line/60" />
-      <div className="h-4 w-1/2 rounded bg-line/40" />
-      <div className="h-4 w-2/3 rounded bg-line/40" />
-    </div>
-  );
-}
 
 export function PaymentDetailPage() {
   const { paymentId } = useParams<{ paymentId: string }>();
@@ -57,131 +31,128 @@ export function PaymentDetailPage() {
 
   if (!paymentId) {
     return (
-      <p className="text-sm text-danger">Missing payment ID in the URL.</p>
+      <EmptyState
+        title="Missing payment ID"
+        description="Open a payment from the ledger to view its details."
+        action={<BackLink to="/">← Back to payments</BackLink>}
+      />
     );
   }
 
   return (
-    <div className="space-y-8">
-      <div>
-        <Link
-          to="/"
-          className="text-sm font-medium text-accent no-underline hover:underline"
-        >
-          ← Back to payments
-        </Link>
-      </div>
+    <div className={pageStackClass}>
+      <BackLink to="/">← Back to payments</BackLink>
 
       {isPaymentPending && (
-        <div className="animate-pulse space-y-4">
+        <div className="animate-pulse space-y-4" aria-busy="true" aria-label="Loading payment">
           <div className="h-10 w-48 rounded-lg bg-line/60" />
-          <div className="h-24 rounded-3xl bg-line/40" />
+          <div className="h-28 rounded-3xl bg-line/40" />
+          <div className="grid gap-6 lg:grid-cols-2">
+            <div className="h-48 rounded-3xl bg-line/30" />
+            <div className="h-48 rounded-3xl bg-line/25" />
+          </div>
         </div>
       )}
 
       {!isPaymentPending && notFound && (
-        <div className="rounded-3xl border border-line bg-panel px-6 py-10 text-center">
-          <p className="font-mono text-lg">{paymentId}</p>
-          <p className="mt-2 text-sm text-muted">No payment exists with that ID.</p>
-          <Link
-            to="/"
-            className="mt-4 inline-block text-sm font-medium text-accent no-underline hover:underline"
-          >
-            Search the ledger
-          </Link>
-        </div>
+        <EmptyState
+          monoHint={paymentId}
+          title="Payment not found"
+          description="This ID is not in the ledger. Check the ID or search for a similar payment."
+          action={<BackLink to="/">Search the ledger</BackLink>}
+        />
       )}
 
       {!isPaymentPending && paymentError && !notFound && !payment && (
-        <p className="text-sm text-danger">
-          Could not load payment. {errorMessage(paymentError)}
-        </p>
+        <QueryErrorAlert error={paymentError} />
       )}
 
       {payment && (
         <>
-          <header className="space-y-4">
+          <header className="space-y-5">
             <div className="flex flex-wrap items-start justify-between gap-4">
-              <div>
-                <p className="text-xs font-semibold tracking-[0.16em] text-muted uppercase">
-                  Payment
-                </p>
-                <h1 className="font-mono text-3xl font-medium tracking-tight sm:text-4xl">
-                  {payment.id}
-                </h1>
-              </div>
+              <PageHeader
+                eyebrow="Payment"
+                title={<span className="font-mono text-3xl sm:text-4xl">{payment.id}</span>}
+              />
               <PaymentStatusBadge status={payment.status} />
             </div>
 
-            <div className="flex flex-wrap gap-x-8 gap-y-3 text-sm">
+            <dl className="flex flex-wrap gap-x-10 gap-y-4 text-sm">
               <div>
-                <p className="text-xs text-muted">Amount</p>
-                <p className="text-2xl font-medium tabular-nums">
+                <dt className="text-xs text-muted">Amount</dt>
+                <dd className="text-2xl font-medium tabular-nums">
                   {formatAmount(payment.amount, payment.currency)}
-                </p>
+                </dd>
               </div>
               <div>
-                <p className="text-xs text-muted">Gateway</p>
-                <p className="font-medium">{payment.gateway}</p>
+                <dt className="text-xs text-muted">Gateway</dt>
+                <dd className="font-medium">{payment.gateway}</dd>
               </div>
               <div>
-                <p className="text-xs text-muted">Error code</p>
-                <p className="font-mono text-copper">{payment.error_code ?? "—"}</p>
+                <dt className="text-xs text-muted">Error code</dt>
+                <dd className="font-mono text-copper">{payment.error_code ?? "—"}</dd>
               </div>
               <div>
-                <p className="text-xs text-muted">Customer</p>
-                <p className="font-mono text-[13px]">{payment.customer_id}</p>
+                <dt className="text-xs text-muted">Customer</dt>
+                <dd className="font-mono text-[13px]">{payment.customer_id}</dd>
               </div>
               <div>
-                <p className="text-xs text-muted">Method</p>
-                <p>{payment.payment_method}</p>
+                <dt className="text-xs text-muted">Method</dt>
+                <dd>{payment.payment_method}</dd>
               </div>
-            </div>
+            </dl>
           </header>
 
           <div className="grid gap-6 lg:grid-cols-2">
-            <DetailPanel
+            <Panel
+              id="payment-timeline"
               title="Payment timeline"
               footer={
                 eventsError ? (
-                  <p className="mt-4 text-sm text-danger">
-                    Could not load timeline data. {errorMessage(eventsError)}
-                  </p>
+                  <div className="mt-4">
+                    <QueryErrorAlert error={eventsError} />
+                  </div>
                 ) : undefined
               }
             >
               {isEventsPending ? <PanelSkeleton /> : <PaymentTimeline events={events} />}
-            </DetailPanel>
+            </Panel>
 
             <div className="space-y-6">
-              <DetailPanel
+              <Panel
+                id="payment-events"
                 title="Events"
                 footer={
                   eventsError ? (
-                    <p className="mt-4 text-sm text-danger">
-                      Could not load events. {errorMessage(eventsError)}
-                    </p>
+                    <div className="mt-4">
+                      <QueryErrorAlert error={eventsError} />
+                    </div>
                   ) : undefined
                 }
               >
                 {isEventsPending ? <PanelSkeleton /> : <PaymentEventsList events={events} />}
-              </DetailPanel>
-              <DetailPanel
+              </Panel>
+              <Panel
+                id="payment-logs"
                 title="Logs"
                 footer={
                   logsError ? (
-                    <p className="mt-4 text-sm text-danger">
-                      Could not load logs. {errorMessage(logsError)}
-                    </p>
+                    <div className="mt-4">
+                      <QueryErrorAlert error={logsError} />
+                    </div>
                   ) : undefined
                 }
               >
                 {isLogsPending ? <PanelSkeleton /> : <PaymentLogsList logs={logs} />}
-              </DetailPanel>
+              </Panel>
             </div>
           </div>
 
-          <div className="border-t border-line pt-6">
+          <div className="border-t border-line pt-8">
+            <p className="mb-4 text-sm text-muted">
+              FinPilot will analyze this payment, related events, logs, and internal documentation.
+            </p>
             <InvestigateButton paymentId={payment.id} />
           </div>
         </>

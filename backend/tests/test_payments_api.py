@@ -33,7 +33,9 @@ def test_get_payment_returns_details(client: TestClient, sample_payments: list[P
 def test_get_payment_not_found(client: TestClient) -> None:
     response = client.get("/api/payments/PAY-DOES-NOT-EXIST")
     assert response.status_code == 404
-    assert "not found" in response.json()["detail"].lower()
+    detail = response.json()["detail"]
+    assert detail["code"] == "payment_not_found"
+    assert "not found" in detail["message"].lower()
 
 
 def test_list_payment_events(client: TestClient, sample_payments: list[Payment]) -> None:

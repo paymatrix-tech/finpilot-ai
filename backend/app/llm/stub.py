@@ -9,7 +9,7 @@ from app.llm.types import (
     ChatCompletionResponse,
     ToolCall,
 )
-from app.services.rca import RCA_JSON_MARKER
+from app.prompts.investigation import RCA_JSON_MARKER
 
 
 class StubLLMClient(LLMClient):

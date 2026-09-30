@@ -45,7 +45,7 @@ export function AppShell() {
           </p>
         </div>
       </header>
-      <main className="relative mx-auto w-full max-w-6xl px-5 py-8 sm:py-10">
+      <main className="relative mx-auto w-full max-w-6xl px-5 py-10 sm:px-6 sm:py-12">
         <Outlet />
       </main>
     </div>

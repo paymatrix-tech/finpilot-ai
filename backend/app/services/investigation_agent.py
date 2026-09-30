@@ -1,4 +1,5 @@
 import json
+from collections.abc import Iterator
 from typing import Any
 
 from app.llm.base import LLMClient
@@ -8,26 +9,16 @@ from app.llm.types import (
     ChatMessage,
     ToolCall,
 )
+from app.prompts.investigation import INVESTIGATION_SYSTEM_PROMPT
 from app.schemas import InvestigationQueryResponse, ToolExecutionStep
+from app.services.evidence_requirements import apply_evidence_requirements
 from app.services.investigation_workflow import build_investigation_response
 from app.services.rca import generate_structured_rca
 from app.tools.definitions import PAYMENT_INVESTIGATION_TOOLS
 from app.tools.executor import PaymentToolExecutor, parse_tool_arguments
 from app.tools.exceptions import ToolError
 
-INVESTIGATION_SYSTEM_PROMPT = """You are FinPilot, a payment investigation assistant.
-
-Gather evidence using the available tools before the RCA step runs.
-You have four tools: get_payment, get_payment_events, search_logs, and search_payment_docs.
-
-Workflow:
-1. Confirm payment details with get_payment.
-2. Review lifecycle with get_payment_events when the failure path is unclear.
-3. Search logs for gateway responses, errors, and timeouts.
-4. Search internal documentation for error codes, retry policy, and gateway guidance.
-
-Only call tools you need, but ensure you have enough evidence for a root-cause analysis.
-Do not invent payment data. Do not produce the final RCA JSON yourself."""
+InvestigationEvent = tuple[str, dict[str, Any]]
 
 
 class InvestigationAgent:
@@ -43,6 +34,18 @@ class InvestigationAgent:
         self._max_tool_rounds = max_tool_rounds
 
     def investigate(self, payment_id: str, question: str) -> InvestigationQueryResponse:
+        for event, payload in self.investigate_with_events(payment_id, question):
+            if event == "complete":
+                return InvestigationQueryResponse.model_validate(payload)
+        raise LLMRequestError("Investigation finished without a result.")
+
+    def investigate_with_events(
+        self,
+        payment_id: str,
+        question: str,
+    ) -> Iterator[InvestigationEvent]:
+        yield "started", {"payment_id": payment_id, "question": question}
+
         messages: list[ChatMessage] = [
             ChatMessage(role="system", content=INVESTIGATION_SYSTEM_PROMPT),
             ChatMessage(
@@ -50,18 +53,25 @@ class InvestigationAgent:
                 content=(
                     f"Payment ID: {payment_id}\n"
                     f"Question: {question}\n"
-                    "Use tools to gather payment facts, events, logs, and documentation."
+                    "Investigate using tools. Collect observed facts for a later RCA "
+                    "(payment record, events, logs, and docs as needed)."
                 ),
             ),
         ]
-        steps = self._run_tool_gathering_phase(messages)
+        steps: list[ToolExecutionStep] = []
+        for step in self._iter_tool_gathering_steps(messages):
+            steps.append(step)
+            yield "tool_step", step.model_dump(mode="json")
+
+        yield "rca_started", {}
         rca, model, provider = generate_structured_rca(
             self._llm,
             messages,
             payment_id=payment_id,
             question=question,
         )
-        return build_investigation_response(
+        rca = apply_evidence_requirements(rca, steps=steps)
+        response = build_investigation_response(
             payment_id=payment_id,
             question=question,
             steps=steps,
@@ -69,10 +79,12 @@ class InvestigationAgent:
             model=model,
             provider=provider,
         )
+        yield "complete", json.loads(response.model_dump_json())
 
-    def _run_tool_gathering_phase(self, messages: list[ChatMessage]) -> list[ToolExecutionStep]:
-        steps: list[ToolExecutionStep] = []
-
+    def _iter_tool_gathering_steps(
+        self,
+        messages: list[ChatMessage],
+    ) -> Iterator[ToolExecutionStep]:
         for _ in range(self._max_tool_rounds):
             response = self._llm.chat_completion(
                 ChatCompletionRequest(
@@ -98,7 +110,7 @@ class InvestigationAgent:
             )
             for tool_call in assistant.tool_calls:
                 step = self._run_tool(tool_call)
-                steps.append(step)
+                yield step
                 messages.append(
                     ChatMessage(
                         role="tool",
@@ -107,8 +119,6 @@ class InvestigationAgent:
                         name=tool_call.name,
                     )
                 )
-
-        return steps
 
     def _run_tool(self, tool_call: ToolCall) -> ToolExecutionStep:
         try:

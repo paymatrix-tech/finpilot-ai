@@ -1,8 +1,11 @@
 import { useState } from "react";
-import { ApiError } from "../api/client";
 import { PaymentSearch } from "../components/payments/PaymentSearch";
 import { PaymentTable } from "../components/payments/PaymentTable";
 import { PaymentTableSkeleton } from "../components/payments/PaymentTableSkeleton";
+import { EmptyState } from "../components/ui/EmptyState";
+import { PageHeader } from "../components/ui/PageHeader";
+import { QueryErrorAlert } from "../components/ui/QueryErrorAlert";
+import { panelClass, pageStackClass } from "../components/ui/classes";
 import { useDebouncedValue } from "../hooks/useDebouncedValue";
 import { usePayments } from "../hooks/usePayments";
 
@@ -13,17 +16,14 @@ export function PaymentsPage() {
   const activeQuery = submittedQuery ?? debouncedQuery;
   const paymentsQuery = usePayments(activeQuery);
   const count = paymentsQuery.data?.items.length ?? 0;
+  const hasSearch = activeQuery.trim().length > 0;
 
   return (
-    <div className="space-y-6">
-      <section className="max-w-2xl">
-        <h1 className="font-display text-4xl leading-tight font-medium tracking-tight sm:text-[2.6rem]">
-          Find why a payment failed.
-        </h1>
-        <p className="mt-2 max-w-lg text-[15px] text-muted">
-          Search the ledger by payment ID, gateway, or error code.
-        </p>
-      </section>
+    <div className={pageStackClass}>
+      <PageHeader
+        title="Find why a payment failed."
+        description="Search the ledger by payment ID, gateway, error code, or customer ID."
+      />
 
       <PaymentSearch
         value={query}
@@ -36,34 +36,54 @@ export function PaymentsPage() {
 
       <section
         aria-live="polite"
-        className="overflow-x-auto rounded-3xl border border-line bg-panel shadow-[0_24px_60px_rgba(28,25,21,0.06)]"
+        className={`overflow-x-auto ${panelClass} shadow-[0_24px_60px_rgba(28,25,21,0.06)]`}
       >
-        <div className="flex items-end justify-between gap-4 border-b border-line px-5 py-4">
+        <div className="flex items-end justify-between gap-4 border-b border-line px-5 py-4 sm:px-6">
           <div>
-            <h2 className="text-sm font-semibold">Recent payments</h2>
-            <p className="text-xs text-muted">
+            <h2 className="text-sm font-semibold tracking-wide text-ink">Recent payments</h2>
+            <p className="mt-0.5 text-xs text-muted">
               {paymentsQuery.isPending
                 ? "Loading ledger…"
-                : `${count} ${count === 1 ? "result" : "results"}`}
+                : `${count} ${count === 1 ? "payment" : "payments"}`}
             </p>
           </div>
         </div>
 
         {paymentsQuery.isPending && <PaymentTableSkeleton />}
         {paymentsQuery.isError && !paymentsQuery.data && (
-          <p className="px-5 py-8 text-sm text-danger">
-            Could not load payments.{" "}
-            {paymentsQuery.error instanceof ApiError ||
-            paymentsQuery.error instanceof Error
-              ? paymentsQuery.error.message
-              : "Request failed"}
-          </p>
+          <div className="p-5 sm:p-6">
+            <QueryErrorAlert error={paymentsQuery.error} />
+          </div>
         )}
-        {paymentsQuery.data?.items.length === 0 && (
-          <p className="px-5 py-10 text-center text-sm text-muted">
-            No payments matched that search.
-          </p>
-        )}
+        {!paymentsQuery.isPending &&
+          !paymentsQuery.isError &&
+          paymentsQuery.data?.items.length === 0 && (
+            <div className="p-5 sm:p-6">
+              <EmptyState
+                compact
+                title={hasSearch ? "No matching payments" : "No payments in the ledger"}
+                description={
+                  hasSearch
+                    ? "Try a different ID fragment, gateway name, or error code."
+                    : "Seed the database or adjust your search to explore sample payments."
+                }
+                action={
+                  hasSearch ? (
+                    <button
+                      type="button"
+                      className="text-sm font-medium text-accent"
+                      onClick={() => {
+                        setQuery("");
+                        setSubmittedQuery("");
+                      }}
+                    >
+                      Clear search
+                    </button>
+                  ) : undefined
+                }
+              />
+            </div>
+          )}
         {!!paymentsQuery.data?.items.length && (
           <PaymentTable payments={paymentsQuery.data.items} />
         )}
