@@ -1038,10 +1038,10 @@ Milestone:
 
 ## Day 22
 
--   [ ] Backend tests
--   [ ] Payment API tests
--   [ ] Tool tests
--   [ ] Investigation tests
+-   [x] Backend tests
+-   [x] Payment API tests
+-   [x] Tool tests
+-   [x] Investigation tests
 
 ------------------------------------------------------------------------
 

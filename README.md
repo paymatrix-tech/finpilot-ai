@@ -54,9 +54,22 @@ The Vite dev server proxies `/api` and `/health` to `http://127.0.0.1:8000`. The
 | `npm run db:up` | Start PostgreSQL |
 | `npm run dev:api` | FastAPI with reload |
 | `npm run dev:web` | Vite dev server |
-| `npm run test:api` | Backend pytest suite |
+| `npm run test:api` | Backend pytest suite (`backend/tests/`) |
+
+Requires PostgreSQL running (`npm run db:up`) and migrations applied. Tests use stub LLM/embeddings by default.
+
+### Test layout
+
+| Area | Module |
+| --- | --- |
+| Payments API | `test_payments_api.py` |
+| Payment tools | `test_payment_tools.py`, `test_tool_calling.py` |
+| Investigations | `test_investigation_*.py` |
+| RAG / docs | `test_documentation*.py`, `test_embeddings.py` |
+| Schema / seed | `test_schema.py`, `test_seed.py` |
 
 ## Milestones
 
 - **v0.1** — Payment data (API + seed)
-- **v0.2** — Payment UI wired to API *(current)*
+- **v0.2** — Payment UI wired to API
+- **v0.7** — Backend test suite *(current)*
