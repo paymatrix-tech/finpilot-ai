@@ -1047,10 +1047,10 @@ Milestone:
 
 ## Day 23
 
--   [ ] RAG evaluation
--   [ ] Create 10--20 known questions
--   [ ] Check retrieved documents
--   [ ] Check final answers
+-   [x] RAG evaluation
+-   [x] Create 10--20 known questions
+-   [x] Check retrieved documents
+-   [x] Check final answers
 
 Example:
 

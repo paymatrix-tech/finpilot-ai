@@ -65,11 +65,12 @@ Requires PostgreSQL running (`npm run db:up`) and migrations applied. Tests use 
 | Payments API | `test_payments_api.py` |
 | Payment tools | `test_payment_tools.py`, `test_tool_calling.py` |
 | Investigations | `test_investigation_*.py` |
-| RAG / docs | `test_documentation*.py`, `test_embeddings.py` |
+| RAG / docs | `test_documentation*.py`, `test_embeddings.py`, `test_rag_evaluation.py` |
 | Schema / seed | `test_schema.py`, `test_seed.py` |
 
 ## Milestones
 
 - **v0.1** — Payment data (API + seed)
 - **v0.2** — Payment UI wired to API
-- **v0.7** — Backend test suite *(current)*
+- **v0.7** — Backend test suite
+- **RAG eval** — 18 known doc questions + investigation answer checks *(current)*
