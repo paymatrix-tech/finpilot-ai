@@ -58,6 +58,8 @@ The Vite dev server proxies `/api` and `/health` to `http://127.0.0.1:8000`. The
 
 Requires PostgreSQL running (`npm run db:up`) and migrations applied. Tests use stub LLM/embeddings by default.
 
+See [SECURITY.md](SECURITY.md) for secrets, validation, and read-only tools.
+
 ### Test layout
 
 | Area | Module |

@@ -1,8 +1,16 @@
 import json
 from typing import Any
 
-from app.tools.exceptions import PaymentNotFoundError, ToolError
+from app.security.tools import assert_read_only_tool
+from app.security.validation import (
+    clamp_doc_search_limit,
+    normalize_bounded_text,
+    validate_payment_id_tool,
+    MAX_DOC_SEARCH_QUERY_LENGTH,
+    MAX_LOG_SEARCH_QUERY_LENGTH,
+)
 from app.tools.documentation import DocumentationTools
+from app.tools.exceptions import PaymentNotFoundError, ToolError
 from app.tools.payment import PaymentTools
 
 
@@ -17,30 +25,43 @@ class PaymentToolExecutor:
 
     def execute(self, name: str, arguments: dict[str, Any]) -> Any:
         try:
+            assert_read_only_tool(name)
+
             if name == "get_payment":
-                payment_id = _require_str(arguments, "payment_id")
+                payment_id = validate_payment_id_tool(_require_str(arguments, "payment_id"))
                 return self._tools.get_payment(payment_id).model_dump(mode="json")
 
             if name == "get_payment_events":
-                payment_id = _require_str(arguments, "payment_id")
+                payment_id = validate_payment_id_tool(_require_str(arguments, "payment_id"))
                 events = self._tools.get_payment_events(payment_id)
                 return [event.model_dump(mode="json") for event in events]
 
             if name == "search_logs":
-                payment_id = _require_str(arguments, "payment_id")
+                payment_id = validate_payment_id_tool(_require_str(arguments, "payment_id"))
                 query = arguments.get("query")
                 if query is not None and not isinstance(query, str):
                     raise ToolError("search_logs query must be a string when provided.")
+                if isinstance(query, str) and query.strip():
+                    query = normalize_bounded_text(
+                        query,
+                        max_length=MAX_LOG_SEARCH_QUERY_LENGTH,
+                        field_name="search_logs query",
+                    )
                 logs = self._tools.search_logs(payment_id, query=query)
                 return [log.model_dump(mode="json") for log in logs]
 
             if name == "search_payment_docs":
                 if self._documentation_tools is None:
                     raise ToolError("Documentation search is not configured.")
-                query = _require_str(arguments, "query")
+                query = normalize_bounded_text(
+                    _require_str(arguments, "query"),
+                    max_length=MAX_DOC_SEARCH_QUERY_LENGTH,
+                    field_name="search_payment_docs query",
+                )
                 limit = arguments.get("limit", 5)
                 if not isinstance(limit, int):
                     raise ToolError("search_payment_docs limit must be an integer when provided.")
+                limit = clamp_doc_search_limit(limit)
                 results = self._documentation_tools.search_payment_docs(query, limit=limit)
                 return [result.model_dump(mode="json") for result in results]
 

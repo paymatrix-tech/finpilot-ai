@@ -1066,11 +1066,11 @@ Insufficient funds
 
 ## Day 24
 
--   [ ] Security review
--   [ ] Validate inputs
--   [ ] Keep tools read-only
--   [ ] Check environment variables
--   [ ] Remove secrets from Git
+-   [x] Security review
+-   [x] Validate inputs
+-   [x] Keep tools read-only
+-   [x] Check environment variables
+-   [x] Remove secrets from Git
 
 ------------------------------------------------------------------------
 

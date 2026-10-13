@@ -6,6 +6,7 @@ from sqlalchemy.exc import SQLAlchemyError
 
 class ErrorDetail:
     PAYMENT_NOT_FOUND = "payment_not_found"
+    VALIDATION_ERROR = "validation_error"
     DATABASE_ERROR = "database_error"
     LLM_UNAVAILABLE = "llm_unavailable"
     LLM_REQUEST_FAILED = "llm_request_failed"
@@ -26,6 +27,14 @@ def http_error(
     message: str,
 ) -> HTTPException:
     return HTTPException(status_code=status_code, detail=error_detail(code, message))
+
+
+def validation_error(message: str) -> HTTPException:
+    return http_error(
+        status.HTTP_422_UNPROCESSABLE_CONTENT,
+        code=ErrorDetail.VALIDATION_ERROR,
+        message=message,
+    )
 
 
 def payment_not_found(payment_id: str) -> HTTPException:

@@ -1,6 +1,8 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Path, Query
+
+from app.security.validation import MAX_PAYMENT_ID_LENGTH, MAX_PAYMENT_LIST_QUERY_LENGTH
 from sqlalchemy.orm import Session
 
 from app.db import get_session
@@ -19,6 +21,16 @@ from app.services.payment import PaymentService
 
 router = APIRouter(prefix="/api/payments", tags=["payments"])
 
+PaymentIdPath = Annotated[
+    str,
+    Path(
+        min_length=1,
+        max_length=MAX_PAYMENT_ID_LENGTH,
+        pattern=r"^PAY-[A-Z0-9]+(?:-[A-Z0-9]+)*$",
+        description="Payment identifier, e.g. PAY-1001",
+    ),
+]
+
 
 def get_payment_service(session: Annotated[Session, Depends(get_session)]) -> PaymentService:
     return PaymentService(PaymentRepository(session))
@@ -36,8 +48,12 @@ def get_investigation_store(
 @router.get("", response_model=PaymentListResponse)
 def list_payments(
     service: Annotated[PaymentService, Depends(get_payment_service)],
-    q: str | None = Query(default=None, description="Search by id, gateway, error code, or customer"),
-    status: str | None = Query(default=None),
+    q: str | None = Query(
+        default=None,
+        max_length=MAX_PAYMENT_LIST_QUERY_LENGTH,
+        description="Search by id, gateway, error code, or customer",
+    ),
+    status: str | None = Query(default=None, max_length=32),
     limit: int = Query(default=50, ge=1, le=200),
 ) -> PaymentListResponse:
     payments = service.list_payments(query=q, status=status, limit=limit)
@@ -46,7 +62,7 @@ def list_payments(
 
 @router.get("/{payment_id}", response_model=PaymentRead)
 def get_payment(
-    payment_id: str,
+    payment_id: PaymentIdPath,
     service: Annotated[PaymentService, Depends(get_payment_service)],
 ) -> Payment:
     return service.get_payment(payment_id)
@@ -54,7 +70,7 @@ def get_payment(
 
 @router.get("/{payment_id}/investigations", response_model=InvestigationListResponse)
 def list_payment_investigations(
-    payment_id: str,
+    payment_id: PaymentIdPath,
     store: Annotated[InvestigationStoreService, Depends(get_investigation_store)],
     limit: int = Query(default=50, ge=1, le=200),
 ) -> InvestigationListResponse:
@@ -64,7 +80,7 @@ def list_payment_investigations(
 
 @router.get("/{payment_id}/events", response_model=PaymentEventListResponse)
 def list_payment_events(
-    payment_id: str,
+    payment_id: PaymentIdPath,
     service: Annotated[PaymentService, Depends(get_payment_service)],
 ) -> PaymentEventListResponse:
     events = service.get_payment_events(payment_id)
@@ -73,7 +89,7 @@ def list_payment_events(
 
 @router.get("/{payment_id}/logs", response_model=PaymentLogListResponse)
 def list_payment_logs(
-    payment_id: str,
+    payment_id: PaymentIdPath,
     service: Annotated[PaymentService, Depends(get_payment_service)],
 ) -> PaymentLogListResponse:
     logs = service.get_payment_logs(payment_id)
