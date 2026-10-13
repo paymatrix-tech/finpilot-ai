@@ -1076,47 +1076,47 @@ Insufficient funds
 
 ## Day 25
 
--   [ ] Docker cleanup
--   [ ] Verify fresh installation
--   [ ] Test:
+-   [x] Docker cleanup
+-   [x] Verify fresh installation
+-   [x] Test:
 
 docker compose up
 
 
-    Goal:
+Goal:
 
-    > A new machine can start the application easily.
+> A new machine can start the application easily.
 
-    ---
+------------------------------------------------------------------------
 
-    ## Day 26
+## Day 26
 
-    - [ ] Improve README
-    - [ ] Add architecture diagram
-    - [ ] Add screenshots
-    - [ ] Add setup instructions
-    - [ ] Add sample investigation
+-   [ ] Improve README
+-   [ ] Add architecture diagram
+-   [ ] Add screenshots
+-   [ ] Add setup instructions
+-   [ ] Add sample investigation
 
-    ---
+------------------------------------------------------------------------
 
-    ## Day 27
+## Day 27
 
-    - [ ] Deploy application
-    - [ ] Verify production environment
-    - [ ] Test complete investigation
+-   [ ] Deploy application
+-   [ ] Verify production environment
+-   [ ] Test complete investigation
 
-    ---
+------------------------------------------------------------------------
 
-    ## Day 28
+## Day 28
 
-    - [ ] Fix production issues
-    - [ ] Clean Git history
-    - [ ] Clean unused code
-    - [ ] Remove unused dependencies
+-   [ ] Fix production issues
+-   [ ] Clean Git history
+-   [ ] Clean unused code
+-   [ ] Remove unused dependencies
 
-    ---
+------------------------------------------------------------------------
 
-    ## Day 29
+## Day 29
 
     Record a 3–5 minute demo:
 

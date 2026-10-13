@@ -1,6 +1,10 @@
+# FinPilot local stack (Day 25). Postgres only — API and UI run on the host via npm scripts.
+name: finpilot-ai
+
 services:
   postgres:
     image: pgvector/pgvector:pg16
+    restart: unless-stopped
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-finpilot}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-finpilot}
@@ -10,10 +14,15 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-finpilot} -d ${POSTGRES_DB:-finpilot}"]
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${POSTGRES_USER:-finpilot} -d ${POSTGRES_DB:-finpilot}",
+        ]
       interval: 5s
       timeout: 5s
       retries: 10
+      start_period: 5s
 
 volumes:
   postgres_data:

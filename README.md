@@ -8,42 +8,48 @@ AI payment investigation assistant (30-day MVP). Week 1 milestone: browse failed
 - **Backend:** FastAPI, SQLAlchemy, Alembic
 - **Database:** PostgreSQL (Docker Compose)
 
-## Quick start
+## Prerequisites
 
-1. Copy environment variables:
+- [Docker](https://docs.docker.com/get-docker/) (OrbStack, Docker Desktop, etc.)
+- Python 3.12+ and Node.js 20+
 
-   ```bash
-   cp .env.example .env
-   ```
+## Quick start (new machine)
 
-2. Start PostgreSQL:
+One command after cloning (creates `.env`, starts Postgres, venv, migrations, seed, frontend deps):
 
-   ```bash
-   docker compose up -d
-   ```
+```bash
+npm run setup
+```
 
-3. Create a Python virtualenv, install backend deps, migrate, and seed:
+Then run the app:
 
-   ```bash
-   python3 -m venv .venv
-   source .venv/bin/activate
-   pip install -r backend/requirements.txt
-   cd backend && alembic upgrade head && python -m app.seed && cd ..
-   ```
+```bash
+npm run dev:api    # terminal 1
+npm run dev:web    # terminal 2
+```
 
-4. Run the API (terminal 1):
+Open [http://localhost:5173](http://localhost:5173) and search for `PAY-1001`.
 
-   ```bash
-   npm run dev:api
-   ```
+### Manual steps (equivalent)
 
-5. Run the UI (terminal 2):
+1. `cp .env.example .env`
+2. `npm run db:up` — `docker compose up -d --wait`
+3. `python3 -m venv .venv && .venv/bin/pip install -r backend/requirements.txt`
+4. `cd backend && ../.venv/bin/alembic upgrade head && ../.venv/bin/python -m app.seed`
+5. `npm install --prefix frontend`
 
-   ```bash
-   cd frontend && npm install && npm run dev
-   ```
+### Fresh database (wipe volume)
 
-6. Open [http://localhost:5173](http://localhost:5173) and search for `PAY-1001`.
+```bash
+npm run setup:fresh
+# or: npm run db:reset   # keeps .venv, re-migrates and re-seeds
+```
+
+Verify Postgres (and API if running):
+
+```bash
+npm run verify
+```
 
 The Vite dev server proxies `/api` and `/health` to `http://127.0.0.1:8000`. The header shows **API connected** when the backend and database are healthy.
 
@@ -51,7 +57,11 @@ The Vite dev server proxies `/api` and `/health` to `http://127.0.0.1:8000`. The
 
 | Command | Description |
 | --- | --- |
-| `npm run db:up` | Start PostgreSQL |
+| `npm run setup` | First-time bootstrap (Docker + deps + migrate + seed) |
+| `npm run setup:fresh` | Wipe DB volume and bootstrap again |
+| `npm run verify` | Smoke-check DB and optional API health |
+| `npm run db:up` | Start PostgreSQL (`compose up --wait`) |
+| `npm run db:reset` | Drop volume, migrate, and seed |
 | `npm run dev:api` | FastAPI with reload |
 | `npm run dev:web` | Vite dev server |
 | `npm run test:api` | Backend pytest suite (`backend/tests/`) |
@@ -75,4 +85,5 @@ See [SECURITY.md](SECURITY.md) for secrets, validation, and read-only tools.
 - **v0.1** — Payment data (API + seed)
 - **v0.2** — Payment UI wired to API
 - **v0.7** — Backend test suite
-- **RAG eval** — 18 known doc questions + investigation answer checks *(current)*
+- **RAG eval** — 18 known doc questions + investigation answer checks
+- **Fresh install** — `npm run setup` / `docker compose` *(current)*
