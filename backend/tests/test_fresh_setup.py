@@ -23,6 +23,13 @@ def test_bootstrap_scripts_exist() -> None:
     assert (scripts / "fresh-install.sh").is_file()
 
 
+def test_portfolio_docs_exist() -> None:
+    assert (REPO_ROOT / "docs" / "architecture.md").is_file()
+    assert (REPO_ROOT / "docs" / "sample-investigation.md").is_file()
+    assert (REPO_ROOT / "docs" / "screenshots" / "payments-list.svg").is_file()
+    assert (REPO_ROOT / "docs" / "screenshots" / "investigation-result.svg").is_file()
+
+
 @pytest.mark.parametrize(
     "script",
     ["bootstrap.sh", "verify-setup.sh", "fresh-install.sh"],

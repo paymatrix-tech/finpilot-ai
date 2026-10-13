@@ -1091,11 +1091,11 @@ Goal:
 
 ## Day 26
 
--   [ ] Improve README
--   [ ] Add architecture diagram
--   [ ] Add screenshots
--   [ ] Add setup instructions
--   [ ] Add sample investigation
+-   [x] Improve README
+-   [x] Add architecture diagram
+-   [x] Add screenshots
+-   [x] Add setup instructions
+-   [x] Add sample investigation
 
 ------------------------------------------------------------------------
 
