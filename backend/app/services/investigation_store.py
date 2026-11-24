@@ -1,4 +1,5 @@
-from app.api_errors import investigation_not_found, payment_not_found
+from app.api_errors import investigation_not_found, payment_not_found, validation_error
+from app.security.validation import InvalidPaymentIdError, validate_payment_id
 from app.models import Investigation
 from app.repositories.investigation import InvestigationRepository
 from app.repositories.payment import PaymentRepository
@@ -15,6 +16,10 @@ class InvestigationStoreService:
         self._payments = payment_repository
 
     def require_payment(self, payment_id: str) -> None:
+        try:
+            payment_id = validate_payment_id(payment_id)
+        except InvalidPaymentIdError as exc:
+            raise validation_error(str(exc)) from exc
         if self._payments.get_by_id(payment_id) is None:
             raise payment_not_found(payment_id)
 

@@ -84,3 +84,9 @@ def test_list_payment_investigations(
 def test_get_investigation_not_found(client: TestClient) -> None:
     response = client.get("/api/investigations/999999")
     assert response.status_code == 404
+
+
+def test_list_payment_investigations_not_found(client: TestClient) -> None:
+    response = client.get("/api/payments/PAY-MISSING/investigations")
+    assert response.status_code == 404
+    assert response.json()["detail"]["code"] == "payment_not_found"

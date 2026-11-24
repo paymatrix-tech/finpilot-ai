@@ -1038,19 +1038,19 @@ Milestone:
 
 ## Day 22
 
--   [ ] Backend tests
--   [ ] Payment API tests
--   [ ] Tool tests
--   [ ] Investigation tests
+-   [x] Backend tests
+-   [x] Payment API tests
+-   [x] Tool tests
+-   [x] Investigation tests
 
 ------------------------------------------------------------------------
 
 ## Day 23
 
--   [ ] RAG evaluation
--   [ ] Create 10--20 known questions
--   [ ] Check retrieved documents
--   [ ] Check final answers
+-   [x] RAG evaluation
+-   [x] Create 10--20 known questions
+-   [x] Check retrieved documents
+-   [x] Check final answers
 
 Example:
 
@@ -1066,57 +1066,57 @@ Insufficient funds
 
 ## Day 24
 
--   [ ] Security review
--   [ ] Validate inputs
--   [ ] Keep tools read-only
--   [ ] Check environment variables
--   [ ] Remove secrets from Git
+-   [x] Security review
+-   [x] Validate inputs
+-   [x] Keep tools read-only
+-   [x] Check environment variables
+-   [x] Remove secrets from Git
 
 ------------------------------------------------------------------------
 
 ## Day 25
 
--   [ ] Docker cleanup
--   [ ] Verify fresh installation
--   [ ] Test:
+-   [x] Docker cleanup
+-   [x] Verify fresh installation
+-   [x] Test:
 
 docker compose up
 
 
-    Goal:
+Goal:
 
-    > A new machine can start the application easily.
+> A new machine can start the application easily.
 
-    ---
+------------------------------------------------------------------------
 
-    ## Day 26
+## Day 26
 
-    - [ ] Improve README
-    - [ ] Add architecture diagram
-    - [ ] Add screenshots
-    - [ ] Add setup instructions
-    - [ ] Add sample investigation
+-   [x] Improve README
+-   [x] Add architecture diagram
+-   [x] Add screenshots
+-   [x] Add setup instructions
+-   [x] Add sample investigation
 
-    ---
+------------------------------------------------------------------------
 
-    ## Day 27
+## Day 27
 
-    - [ ] Deploy application
-    - [ ] Verify production environment
-    - [ ] Test complete investigation
+-   [ ] Deploy application
+-   [ ] Verify production environment
+-   [ ] Test complete investigation
 
-    ---
+------------------------------------------------------------------------
 
-    ## Day 28
+## Day 28
 
-    - [ ] Fix production issues
-    - [ ] Clean Git history
-    - [ ] Clean unused code
-    - [ ] Remove unused dependencies
+-   [ ] Fix production issues
+-   [ ] Clean Git history
+-   [ ] Clean unused code
+-   [ ] Remove unused dependencies
 
-    ---
+------------------------------------------------------------------------
 
-    ## Day 29
+## Day 29
 
     Record a 3–5 minute demo:
 

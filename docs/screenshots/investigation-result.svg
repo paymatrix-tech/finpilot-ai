@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="560" viewBox="0 0 960 560" role="img" aria-label="FinPilot investigation result mockup">
+  <rect width="960" height="560" fill="#0f1419"/>
+  <rect x="0" y="0" width="960" height="56" fill="#161b22"/>
+  <text x="24" y="36" fill="#e6edf3" font-family="system-ui,sans-serif" font-size="18" font-weight="600">Investigation  PAY-1001</text>
+  <rect x="24" y="80" width="912" height="460" rx="8" fill="#161b22" stroke="#30363d"/>
+  <text x="40" y="116" fill="#8b949e" font-family="system-ui,sans-serif" font-size="12">CONFIDENCE</text>
+  <rect x="40" y="124" width="56" height="22" rx="4" fill="#1f3d2a" stroke="#3fb950"/>
+  <text x="52" y="140" fill="#3fb950" font-family="system-ui,sans-serif" font-size="12">high</text>
+  <text x="40" y="180" fill="#e6edf3" font-family="system-ui,sans-serif" font-size="16" font-weight="600">Root cause</text>
+  <text x="40" y="206" fill="#c9d1d9" font-family="system-ui,sans-serif" font-size="15">Insufficient funds</text>
+  <text x="40" y="248" fill="#e6edf3" font-family="system-ui,sans-serif" font-size="16" font-weight="600">Evidence</text>
+  <text x="40" y="274" fill="#c9d1d9" font-family="system-ui,sans-serif" font-size="14">" Gateway returned error code R01</text>
+  <text x="40" y="298" fill="#c9d1d9" font-family="system-ui,sans-serif" font-size="14">" Payment status is FAILED</text>
+  <text x="40" y="340" fill="#e6edf3" font-family="system-ui,sans-serif" font-size="16" font-weight="600">Sources</text>
+  <text x="40" y="366" fill="#58a6ff" font-family="ui-monospace,monospace" font-size="13">ach-error-codes.md</text>
+  <text x="40" y="408" fill="#e6edf3" font-family="system-ui,sans-serif" font-size="16" font-weight="600">Recommendation</text>
+  <text x="40" y="434" fill="#c9d1d9" font-family="system-ui,sans-serif" font-size="14">Do not retry immediately; notify the customer to fund the account.</text>
+  <rect x="40" y="460" width="200" height="32" rx="6" fill="#21262d" stroke="#30363d"/>
+  <text x="56" y="482" fill="#8b949e" font-family="system-ui,sans-serif" font-size="12">Tool: get_payment </text>
+  <text x="24" y="548" fill="#6e7681" font-family="system-ui,sans-serif" font-size="11">UI mockup for README  stub investigation for PAY-1001</text>
+</svg>

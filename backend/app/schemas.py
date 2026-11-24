@@ -2,7 +2,14 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Any
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
+
+from app.security.validation import (
+    MAX_INVESTIGATION_QUESTION_LENGTH,
+    MAX_PAYMENT_ID_LENGTH,
+    validate_investigation_question,
+    validate_payment_id,
+)
 
 
 class PaymentRead(BaseModel):
@@ -81,8 +88,18 @@ class PaymentDocSearchResult(BaseModel):
 
 
 class InvestigationQueryRequest(BaseModel):
-    payment_id: str = Field(min_length=1)
-    question: str = Field(min_length=1)
+    payment_id: str = Field(min_length=1, max_length=MAX_PAYMENT_ID_LENGTH)
+    question: str = Field(min_length=1, max_length=MAX_INVESTIGATION_QUESTION_LENGTH)
+
+    @field_validator("payment_id")
+    @classmethod
+    def _payment_id_format(cls, value: str) -> str:
+        return validate_payment_id(value)
+
+    @field_validator("question")
+    @classmethod
+    def _question_bounds(cls, value: str) -> str:
+        return validate_investigation_question(value)
 
 
 class ToolExecutionStep(BaseModel):
@@ -92,11 +109,22 @@ class ToolExecutionStep(BaseModel):
 
 
 class InvestigationCreateRequest(BaseModel):
-    payment_id: str = Field(min_length=1)
+    payment_id: str = Field(min_length=1, max_length=MAX_PAYMENT_ID_LENGTH)
     question: str = Field(
         default="Why did this payment fail?",
         min_length=1,
+        max_length=MAX_INVESTIGATION_QUESTION_LENGTH,
     )
+
+    @field_validator("payment_id")
+    @classmethod
+    def _payment_id_format(cls, value: str) -> str:
+        return validate_payment_id(value)
+
+    @field_validator("question")
+    @classmethod
+    def _question_bounds(cls, value: str) -> str:
+        return validate_investigation_question(value)
 
 
 class InvestigationListResponse(BaseModel):

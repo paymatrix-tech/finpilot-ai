@@ -2,6 +2,8 @@ from sqlalchemy import or_, select
 from sqlalchemy.orm import Session
 
 from app.models import Payment, PaymentEvent, PaymentLog
+from app.security.sql import escape_like_pattern
+from app.security.validation import MAX_PAYMENT_LIST_QUERY_LENGTH
 
 
 class PaymentRepository:
@@ -21,13 +23,14 @@ class PaymentRepository:
             statement = statement.where(Payment.status == status)
 
         if query:
-            pattern = f"%{query}%"
+            safe = escape_like_pattern(query[:MAX_PAYMENT_LIST_QUERY_LENGTH])
+            pattern = f"%{safe}%"
             statement = statement.where(
                 or_(
-                    Payment.id.ilike(pattern),
-                    Payment.gateway.ilike(pattern),
-                    Payment.error_code.ilike(pattern),
-                    Payment.customer_id.ilike(pattern),
+                    Payment.id.ilike(pattern, escape="\\"),
+                    Payment.gateway.ilike(pattern, escape="\\"),
+                    Payment.error_code.ilike(pattern, escape="\\"),
+                    Payment.customer_id.ilike(pattern, escape="\\"),
                 )
             )
 
@@ -62,12 +65,13 @@ class PaymentRepository:
         statement = select(PaymentLog).where(PaymentLog.payment_id == payment_id)
 
         if query:
-            pattern = f"%{query.strip()}%"
+            safe = escape_like_pattern(query.strip()[:500])
+            pattern = f"%{safe}%"
             statement = statement.where(
                 or_(
-                    PaymentLog.message.ilike(pattern),
-                    PaymentLog.service.ilike(pattern),
-                    PaymentLog.level.ilike(pattern),
+                    PaymentLog.message.ilike(pattern, escape="\\"),
+                    PaymentLog.service.ilike(pattern, escape="\\"),
+                    PaymentLog.level.ilike(pattern, escape="\\"),
                 )
             )
 

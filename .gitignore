@@ -1,5 +1,10 @@
 .env
+.env.*
+!.env.example
 .venv/
+*.pem
+credentials.json
+secrets.json
 __pycache__/
 *.py[cod]
 .pytest_cache/
